@@ -1,0 +1,44 @@
+{
+ "window": [
+  1790985600,
+  1792281600
+ ],
+ "hashes": {
+  "C1": {
+   "trades": "e26bd0ece6881d43",
+   "decisions": "6a928c6c6d2596c3",
+   "equity": "4d15d4304fbab197",
+   "n_trades": 55
+  },
+  "C2": {
+   "trades": "e9a76bfb9b3162c0",
+   "decisions": "f4c9d4f5314d170c",
+   "equity": "3ad2b73896562fbf",
+   "n_trades": 42
+  },
+  "C3": {
+   "trades": "ff80c09c1dff48c6",
+   "decisions": "9e22452c9ca0d3f7",
+   "equity": "f8efa9e4d8047d53",
+   "n_trades": 75
+  },
+  "C4": {
+   "trades": "946348c71e27b203",
+   "decisions": "3d283d615020eb2a",
+   "equity": "52c14329d9d390b5",
+   "n_trades": 8
+  },
+  "C5": {
+   "trades": "fb838f45ab4c591c",
+   "decisions": "198b493e2f9933b5",
+   "equity": "48363bd2e7f8311f",
+   "n_trades": 52
+  },
+  "C6": {
+   "trades": "d112c8d447710daf",
+   "decisions": "6fbb3cbaad0d3a2b",
+   "equity": "0f801f2461748344",
+   "n_trades": 63
+  }
+ }
+}

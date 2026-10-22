@@ -8,7 +8,7 @@
 | P0-01 | done (بخش آفلاین) | 2026-10-22 | T2: `9/9 passed` (pytest هم سبز)؛ T1 `15/15` | T9 (`llm_check --llm box_sol61`) اجرا نشد: `.env`/کلید BoxAPI نیست. `max_completion_tokens` با کلید پروفایل `completion_headroom` (box=2500، بقیه پیش‌فرض قدیمی 4000). سقف دلاری در هر check از env `LLM_BUDGET_USD` خوانده می‌شود (قابل افزایش). بسته بودن بودجه یک درگاه ← پروفایل بعدی زنجیره (اگر دفتر دیگری دارد). `code_version` در `wallex_agent/version.py`. |
 | P0-02 | done | 2026-10-22 | T3: `7/7 passed`؛ کل `pytest tests/` سبز | تصمیم امن: کلید ناشناخته (مثلاً غلط تایپی `pause_entry`) کل فایل را نامعتبر می‌کند؛ فایل نامعتبر در اولین بار ← پیش‌فرض‌ها با `pause_entries: true`. ترتیب زمان‌ها هم چک می‌شود (`no_new_entries_after ≤ flatten_start ≤ hard_deadline`). `set_profile` روی `LLMPolicy`، `Native`، `Reflector` (و `Orchestrator`). اعمال در حلقه = P0-06. |
 | P0-03 | done | 2026-10-22 | `COMBOS["C7"]` چاپ شد (۹ ارز، size_tiers) | — |
-| P0-04 | pending | | | |
+| P0-04 | done | 2026-10-22 | T4: `19/19 passed`؛ T1 `15/15`؛ رگرسیون C1–C6 بیت‌به‌بیت یکسان (`tools/regress_c1_c6.py`، پنجره ثابت ۱۵ روزه ۳ تا ۱۸ اکتبر، hashها در `tests/golden_c1_c6.json` که از موتور قبل از تغییر ضبط شد) | تصمیم امن: `size_mult: 0` ← رد `size_mult_zero` (به جای کف ۶۵k). `control.max_positions` جایگزین کامل `max_pos`. `close_external()` برای بستن‌های بیرون موتور (استاپ سرور/کلاینت) اضافه شد (قرارداد با جریان B). تست رگرسیون به داده `data/candles` آن بازه وابسته است (gitignore)؛ نبود داده ← skip. |
 | P0-05 | pending | | | |
 | P0-06 | pending | | | |
 | P0-07 | pending | | | |
