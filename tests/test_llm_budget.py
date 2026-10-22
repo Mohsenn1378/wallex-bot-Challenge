@@ -51,6 +51,17 @@ def test_cost_formula_exact():
     assert cost_usd(USAGE, None) == 0.0
 
 
+def test_gateway_reported_cost_wins():
+    assert cost_usd(dict(USAGE, cost=0.0008694), PRICE) == 0.0008694
+    assert cost_usd(dict(USAGE, cost=None), PRICE) == cost_usd(USAGE, PRICE)
+
+
+def test_skip_with_zero_stop_is_valid():
+    from wallex_agent.policies import DECISION_SCHEMA
+    from wallex_agent.llm.jsonschema_lite import validate
+    assert validate({"action": "skip", "sl_pct": 0, "thesis": "no edge"}, DECISION_SCHEMA) == []
+
+
 def test_call_is_booked_with_cost():
     d = fresh_dir()
     r = mk(Fake("box_sol61")).decide("s", "p", role="decide")

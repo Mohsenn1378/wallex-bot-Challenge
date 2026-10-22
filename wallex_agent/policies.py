@@ -11,7 +11,7 @@ DECISION_SCHEMA = {
     "properties": {
         "action": {"enum": ["enter", "skip"]},
         "size_tmn": {"type": "number", "minimum": 0},
-        "sl_pct": {"type": "number", "minimum": 0.2, "maximum": 10},
+        "sl_pct": {"type": "number", "minimum": 0, "maximum": 10},   # skips often send 0; guard clamps enters to the band
         "tp_plan": {"type": "array", "maxItems": 3, "items": {
             "type": "object", "required": ["pct", "portion"],
             "properties": {"pct": {"type": "number", "minimum": 0.2, "maximum": 20},

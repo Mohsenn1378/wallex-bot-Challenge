@@ -437,10 +437,14 @@ TokenLedger = Ledger   # old name
 
 
 def cost_usd(usage: dict, price: dict | None, system: str = "", prompt: str = "") -> float:
-    """OpenAI usage semantics: prompt_tokens includes cached tokens; completion_tokens includes reasoning.
-    No usage -> estimate input as len/3.5 and output as 600 tokens."""
+    """Gateway-reported cost (BoxAPI: usage.cost, USD) when present. Otherwise OpenAI usage semantics:
+    prompt_tokens includes cached tokens; completion_tokens includes reasoning. No usage -> estimate input as
+    len/3.5 and output as 600 tokens."""
     if not price:
         return 0.0
+    rep = (usage or {}).get("cost")
+    if isinstance(rep, (int, float)) and not isinstance(rep, bool) and rep >= 0:
+        return float(rep)
     if usage and (usage.get("prompt_tokens") is not None or usage.get("completion_tokens") is not None):
         pt = int(usage.get("prompt_tokens") or 0)
         ct = int(usage.get("completion_tokens") or 0)
