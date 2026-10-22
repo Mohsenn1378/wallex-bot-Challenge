@@ -1,0 +1,18 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# local outputs / caches
+/.cache
+/runs
+/data
+/wallex_check_result.json
+
+# python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.idea/
+.DS_Store

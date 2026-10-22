@@ -1,0 +1,96 @@
+# LLM profiles — pick one with --llm <name> (or per role below).
+# Keys/secrets are NEVER written here: each profile names an env var that lives in .env
+#
+# backend types:
+#   openai_compat   : any OpenAI-compatible HTTP API (OpenAI, OpenRouter, Azure, gateways)
+#   anthropic       : Anthropic Messages API
+#   opencode_server : a running `opencode serve` (uses whatever login opencode has, e.g. ChatGPT)
+#   command         : any CLI that reads the prompt on stdin and prints the answer (opencode run, codex exec, claude -p, ...)
+
+profiles:
+  mock:                      # offline pipeline test only (random-ish decisions, no network)
+    backend: mock
+    timeout_s: 5
+
+  # ---- competition-allowed models via CodeCraft (OpenAI-compatible). Key in .env: CODECRAFT_API_KEY ----
+  sol56:
+    backend: openai_compat
+    base_url: https://codecraftapi.com/v1
+    model: gpt-5.6-sol
+    api_key_env: CODECRAFT_API_KEY
+    reasoning_effort: low
+    timeout_s: 60
+  terra56:
+    backend: openai_compat
+    base_url: https://codecraftapi.com/v1
+    model: gpt-5.6-terra
+    api_key_env: CODECRAFT_API_KEY
+    reasoning_effort: low
+    timeout_s: 60
+  luna56:
+    backend: openai_compat
+    base_url: https://codecraftapi.com/v1
+    model: gpt-5.6-luna
+    api_key_env: CODECRAFT_API_KEY
+    reasoning_effort: low
+    timeout_s: 45
+  sol56_medium:
+    backend: openai_compat
+    base_url: https://codecraftapi.com/v1
+    model: gpt-5.6-sol
+    api_key_env: CODECRAFT_API_KEY
+    reasoning_effort: medium
+    timeout_s: 90
+
+  sol_opencode:
+    backend: opencode_server
+    url: http://127.0.0.1:4096
+    provider_id: openai
+    model_id: gpt-6.1-sol
+    password_env: OPENCODE_SERVER_PASSWORD     # optional
+    timeout_s: 45
+
+  sol_opencode_cli:
+    backend: command
+    cmd: ["opencode", "run", "-m", "openai/gpt-6.1-sol", "--format", "json"]
+    prompt_via: arg            # opencode run takes the message as an argument
+    timeout_s: 90
+
+  sol_api:
+    backend: openai_compat
+    base_url: https://api.openai.com/v1
+    model: gpt-6.1-sol
+    api_key_env: OPENAI_API_KEY
+    reasoning_effort: low
+    timeout_s: 45
+
+  sol_openrouter:
+    backend: openai_compat
+    base_url: https://openrouter.ai/api/v1
+    model: openai/gpt-6.1-sol
+    api_key_env: OPENROUTER_API_KEY
+    timeout_s: 45
+
+  claude_api:
+    backend: anthropic
+    model: claude-sonnet-4-5
+    api_key_env: ANTHROPIC_API_KEY
+    timeout_s: 45
+
+# Which profile each agent role uses. A list = fallback chain (next one is tried if the first fails).
+roles:
+  decide:        [sol56, terra56]
+  risk_manager:  [sol56, terra56]
+  orchestrator:  [sol56, terra56]
+  native:        [sol56, terra56]
+  reflect:       [luna56, sol56]
+  card_eval:     [luna56]
+
+defaults:
+  temperature: 0
+  json_retries: 2
+  max_parallel_calls: 4
+  calls_per_hour: 300
+  token_budget_total: 900000   # ~65k already spent before the ledger existed   # whole CodeCraft budget is 1M tokens; keep a safety margin
+  max_output_tokens: 600          # hard cap; protects subscription/plan limits
+  cache: true                  # identical prompt+profile -> cached answer (needed for replay & reproducibility)

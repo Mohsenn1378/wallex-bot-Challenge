@@ -1,0 +1,355 @@
+<title>کمبوهای ایجنتیک والکس</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: tabbed spec sheet — sizing rules, building-block modules, six LLM-decision combo cards, coin×combo matrix, re-sorted list, test plan; RTL */
+:root{
+  --bg:#f4f5f2; --panel:#ffffff; --ink:#1a201c; --muted:#5f6b64; --line:#dce1dc;
+  --accent:#0f6b52; --accent-soft:#e1efe8;
+  --c1:#b3401f; --c1-bg:#fbe6de; --c2:#1f6fb3; --c2-bg:#e1edf8; --c3:#6a4bb0; --c3-bg:#ece6f8; --c4:#2d7d46; --c4-bg:#e0f1e5; --c5:#a06a00; --c5-bg:#f8eed3; --c6:#0f6b6b; --c6-bg:#dcefef;
+  --warn:#9a6a06; --warn-bg:#f8edcf; --bad:#a4322a; --bad-bg:#f7e1de; --ok:#137a4f; --ok-bg:#dcf2e6;
+  --f-body:"Vazirmatn",Tahoma,system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1412; --panel:#161d1a; --ink:#e4ebe7; --muted:#95a39b; --line:#27312c; --accent:#4fc59c; --accent-soft:#183128;
+  --c1:#f08f6e; --c1-bg:#3a1f16; --c2:#7db7ef; --c2-bg:#16273a; --c3:#b9a2f0; --c3-bg:#251e39; --c4:#7fd39a; --c4-bg:#16301f; --c5:#e6bd5c; --c5-bg:#342a12; --c6:#6fd0d0; --c6-bg:#123232;
+  --warn:#e0b453; --warn-bg:#352b14; --bad:#f08a80; --bad-bg:#3a1e1b; --ok:#5fd39c; --ok-bg:#173326; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --panel:#161d1a; --ink:#e4ebe7; --muted:#95a39b; --line:#27312c; --accent:#4fc59c; --accent-soft:#183128;
+  --c1:#f08f6e; --c1-bg:#3a1f16; --c2:#7db7ef; --c2-bg:#16273a; --c3:#b9a2f0; --c3-bg:#251e39; --c4:#7fd39a; --c4-bg:#16301f; --c5:#e6bd5c; --c5-bg:#342a12; --c6:#6fd0d0; --c6-bg:#123232;
+  --warn:#e0b453; --warn-bg:#352b14; --bad:#f08a80; --bad-bg:#3a1e1b; --ok:#5fd39c; --ok-bg:#173326; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.75;direction:rtl}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1{font-size:25px;font-weight:800;margin:0;text-wrap:balance}
+h2{font-size:18px;margin:0 0 8px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 6px}
+p{margin:0}
+.sub{color:var(--muted);max-width:80ch;margin-top:4px}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding-top:4px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent);font-weight:700}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.callout{border-inline-start:4px solid var(--warn);background:var(--warn-bg);border-radius:6px;padding:12px 14px}
+.callout.bad{border-color:var(--bad);background:var(--bad-bg)}
+.callout.ok{border-color:var(--ok);background:var(--ok-bg)}
+.callout b{display:block;margin-bottom:2px}
+ul{margin:4px 0 0;padding-inline-start:20px} li{margin:2px 0}
+.tablebox{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap;background:var(--panel)}
+td.l{text-align:left;direction:ltr}
+.chip{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;font-weight:700;line-height:21px;white-space:nowrap}
+.C1{background:var(--c1-bg);color:var(--c1)} .C2{background:var(--c2-bg);color:var(--c2)} .C3{background:var(--c3-bg);color:var(--c3)} .C4{background:var(--c4-bg);color:var(--c4)} .C5{background:var(--c5-bg);color:var(--c5)} .C6{background:var(--c6-bg);color:var(--c6)}
+.s-ok{background:var(--ok-bg);color:var(--ok)} .s-warn{background:var(--warn-bg);color:var(--warn)} .s-bad{background:var(--bad-bg);color:var(--bad)}
+.combo{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.combo header{padding:14px 18px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;border-bottom:1px solid var(--line)}
+.combo header .tag{font-family:var(--f-mono);font-weight:600}
+.combo header h2{margin:0}
+.combo header .goal{color:var(--muted);flex-basis:100%}
+.combo .body{padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 22px}
+.combo .body > div{min-width:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.strip{height:4px}
+.strip.C1{background:var(--c1)} .strip.C2{background:var(--c2)} .strip.C3{background:var(--c3)} .strip.C4{background:var(--c4)} .strip.C5{background:var(--c5)} .strip.C6{background:var(--c6)}
+.mod{font-family:var(--f-mono);font-size:12px;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 6px;margin-inline-end:4px;white-space:nowrap}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controls select{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+.formula{font-family:var(--f-mono);direction:ltr;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;overflow-x:auto;white-space:pre}
+.foot{color:var(--muted);font-size:12.5px}
+section[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+  <header>
+    <h1>کمبوهای ایجنتیک چالش والکس</h1>
+    <p class="sub">نسخه ۲. در این نسخه LLM خودش تصمیم معامله رو می‌گیره: ورود یا رد، سایز در بازه مجاز، و حد ضرر و حد سود. کد قانون‌محور فقط فرصت‌ها رو پیدا می‌کنه و سقف‌های ریسک رو اجرا می‌کنه. سرمایه هر کمبو در تست ۲.۵ میلیون تومانه. هنوز چیزی تست نشده و عددها مقدار شروع تست‌اند.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-v="changes">۱. تغییرات</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="arch">۲. معماری ایجنت</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="combos">۳. کمبوها</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="matrix">۴. یک ارز، چند کمبو</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="size">۵. سایز (۲.۵ میلیون)</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="mods">۶. اسکنرها</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="coins">۷. ارزها</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="research">۸. منابع LLM</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="test">۹. پلان تست</button>
+  </nav>
+
+  <!-- 1 CHANGES -->
+  <section id="v-changes" style="display:flex;flex-direction:column;gap:14px">
+    <div class="grid3">
+      <div class="panel"><h3>نکته ۱: نقش واقعی AI</h3><p style="font-size:13px">در نسخه قبل LLM بیشتر ضریب سایز رو عوض می‌کرد یا وتو می‌کرد. در این نسخه در هر کمبو تصمیم معامله با LLM‌ه. یک کمبو هم کاملاً LLM-محوره و اسکنر نداره (C5). یک نقش «بازتاب» هم اضافه شده: LLM بعد از هر معامله درس می‌نویسه و از همون حافظه در تصمیم‌های بعدی استفاده می‌کنه.</p></div>
+      <div class="panel"><h3>نکته ۲: سرمایه تست و نوع تست</h3><p style="font-size:13px">هر کمبو ۲.۵ میلیون تومان سرمایه مجازی داره. یک پیامدش: ۱٪ این مبلغ میشه ۲۵ هزار تومان، که زیر حداقل سفارشه. پس کوچک‌ترین پوزیشن ۵۵ هزار تومانه (۲.۲٪). پیشنهاد من برای نوع تست: هر دو، با دو کار متفاوت. بک‌تست برای قسمت‌های قانون‌محور و پیدا کردن پارامتر. تست سایه برای خود ایجنت LLM، که از امشب شروع بشه (تب ۹).</p></div>
+      <div class="panel"><h3>نکته ۳: مستقل از مدل</h3><p style="font-size:13px">کد به هیچ مدلی وابسته نیست. همه مدل‌ها از یک لایه adapter صدا زده میشن: هر API سازگار با OpenAI (GPT، DeepSeek، Qwen، Gemini، OpenRouter، Ollama محلی) و Claude. خروجی همیشه JSON با schema ثابته و پرامپت‌ها نسخه‌دار. تعویض مدل فقط یک خط در `.env` و یک تست مقایسه‌ای لازم داره.</p></div>
+    </div>
+    <div class="callout"><b>چرا کد قانون‌محور حذف نشده؟</b>تجربه مسابقه Alpha Arena (مدل‌های LLM با پول واقعی کریپتو ترید کردن) نشون داد LLMهای آزاد زیاد معامله می‌کنن و کارمزد سرمایه رو می‌خوره. حد ضرر هم معمولاً رعایت نمیشه. برای همین LLM تصمیم می‌گیره، ولی پیدا کردن فرصت، اجرای سفارش و سقف‌های ریسک قطعی و قابل بازپخش می‌مونن. داورها هم دقیقاً همین تکرارپذیری رو می‌خوان. C5 این فرض رو تست می‌کنه: LLM آزاد در برابر LLM با اسکنر.</div>
+    <div class="panel">
+      <h2>مقایسه با نسخه ۱</h2>
+      <div class="tablebox"><table><thead><tr><th>موضوع</th><th>نسخه ۱</th><th>نسخه ۲</th></tr></thead><tbody>
+        <tr><td>تصمیم ورود</td><td>قانون (if/else) + ضریب LLM</td><td>LLM با اطلاعات چند تایم‌فریم، دفتر سفارش و حافظه تصمیم می‌گیره</td></tr>
+        <tr><td>حد ضرر و حد سود</td><td>ثابت در هر کمبو</td><td>LLM از داخل بازه مجاز کمبو انتخاب می‌کنه و دلیل و نقطه ابطال می‌نویسه</td></tr>
+        <tr><td>تعداد کمبو</td><td>۵</td><td>۶ (اضافه شده: C5 LLM آزاد؛ C6 ارکستراتور با حافظه)</td></tr>
+        <tr><td>چندعاملی</td><td>ندارد</td><td>C3: تحلیلگر + مدیر ریسک که تحلیل رو به چالش می‌کشه (الگوی TradingAgents)</td></tr>
+        <tr><td>حافظه و بازتاب</td><td>ندارد</td><td>درس‌آموزی بعد از هر معامله + بازبینی هر ۲ ساعت (الگوی FinMem و CryptoTrade)</td></tr>
+        <tr><td>اثبات نقش AI</td><td>—</td><td>هر کمبو یک نسخه بدون LLM هم داره تا «AI lift» اندازه‌گیری بشه</td></tr>
+        <tr><td>سرمایه تست</td><td>۵ میلیون مشترک</td><td>۲.۵ میلیون برای هر کمبو</td></tr>
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- 2 ARCH -->
+  <section id="v-arch" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="panel">
+      <h2>چهار لایه ایجنت</h2>
+      <div class="tablebox"><table><thead><tr><th>لایه</th><th>کار</th><th>نوع</th><th>چه کسی می‌تونه تغییرش بده</th></tr></thead><tbody>
+        <tr><td><b>۱. دید (Perception)</b></td><td>گرفتن کندل، دفتر سفارش و معاملات از والکس، محاسبه اندیکاتورها و رژیم، اجرای اسکنرهای M1 تا M8 و ساختن «کارت فرصت»</td><td>کد قطعی</td><td>فقط کد</td></tr>
+        <tr><td><b>۲. تصمیم (LLM)</b></td><td>خوندن کارت فرصت، خلاصه چند تایم‌فریم، دفتر سفارش، وضعیت پرتفوی و حافظه؛ برگردوندن JSON شامل ورود یا رد، سایز، SL، برنامه TP، خروج زمانی، دلیل و نقطه ابطال</td><td>LLM (قابل تعویض)</td><td>LLM، داخل بازه مجاز کمبو</td></tr>
+        <tr><td><b>۳. گاردریل و اجرا</b></td><td>اعتبارسنجی JSON، محدود کردن عددها به بازه، چک حداقل سفارش، پله مقدار، سقف درگیری و توقف روزانه، ثبت سفارش و stop سمت سرور</td><td>کد قطعی</td><td>هیچ‌کس؛ LLM نمی‌تونه رد بشه ازش</td></tr>
+        <tr><td><b>۴. بازتاب و حافظه</b></td><td>بعد از بسته شدن هر معامله LLM یک درس کوتاه می‌نویسه. هر ۲ ساعت حافظه رو خلاصه می‌کنه و وزن هر playbook برای هر ارز رو به‌روز می‌کنه</td><td>LLM + ذخیره JSON</td><td>LLM</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>خروجی تصمیم LLM (schema ثابت)</h2>
+        <div class="formula">{
+  "action": "enter" | "skip",
+  "symbol": "SOLTMN",
+  "playbook": "M4",
+  "size_tmn": 80000,          // clamp to combo band
+  "sl_pct": 1.2,              // clamp to combo band
+  "tp_plan": [{"pct":1.2,"portion":0.5},
+              {"pct":2.4,"portion":0.5}],
+  "time_stop_min": 60,
+  "confidence": 0.71,
+  "thesis": "sweep of 15m pivot + bid imbalance",
+  "invalidation": "15m close below 28.41M",
+  "lesson_ids_used": ["sol-m4-03"]
+}</div></div>
+      <div class="panel"><h2>مستقل از مدل</h2>
+        <ul>
+          <li><b>یک رابط ثابت:</b> <span class="mono">llm.decide(prompt, schema) → dict</span>. دو adapter داره: یکی برای APIهای سازگار با OpenAI و یکی برای Anthropic.</li>
+          <li><b>تنظیم با `.env`:</b> <span class="mono">LLM_PROVIDER</span>، <span class="mono">LLM_MODEL</span>، <span class="mono">LLM_BASE_URL</span>، <span class="mono">LLM_API_KEY</span>.</li>
+          <li><b>فقط JSON:</b> به function calling یا قابلیت خاص هیچ مدلی وابسته نیست. اگه خروجی اشتباه باشه، دو بار retry میشه و بعد تصمیم «skip» ثبت میشه.</li>
+          <li><b>پرامپت نسخه‌دار:</b> در <span class="mono">prompts/*.md</span> با شماره نسخه؛ نسخه پرامپت و hash ورودی کنار هر تصمیم ذخیره میشه.</li>
+          <li><b>بازپخش (replay):</b> ورودی‌های ذخیره‌شده تست سایه رو میشه به مدل دیگه داد و تصمیم‌ها رو مقایسه کرد.</li>
+          <li><b>مدل محلی:</b> روی سیستم شما Ollama نصبه. یک مدل کوچک محلی برای بک‌تست‌های ارزون شبانه گزینه خوبیه.</li>
+          <li><b>جایگزین در خطا:</b> اگه LLM جواب نده یا timeout بشه، روتر قانون‌محور تصمیم می‌گیره و این اتفاق در لاگ علامت می‌خوره.</li>
+        </ul></div>
+    </div>
+    <div class="panel"><h2>ورودی پرامپت تصمیم</h2>
+      <ul>
+        <li><b>کارت فرصت:</b> اسکنر، دلیل trigger، قیمت و فاصله تا سطوح کلیدی</li>
+        <li><b>خلاصه بازار:</b> خلاصه ۱ دقیقه، ۵ دقیقه، ۱۵ دقیقه و ۱ ساعته (آخرین ۲۰ کندل فشرده + ATR٪، RSI، موقعیت نسبت به BB و VWAP، EMAها)</li>
+        <li><b>ریزساختار بازار:</b> عدم‌تعادل ۱۰ سطح اول دفتر سفارش، جریان خرید و فروش ۵ دقیقه اخیر، اسپرد</li>
+        <li><b>بازار کلی:</b> رژیم BTC و حرکت ۱۵ دقیقه و ۱ ساعته‌ش</li>
+        <li><b>پرتفوی:</b> پوزیشن‌های باز، سود و زیان امروز، گرمای ریسک، تعداد معاملات ساعت اخیر</li>
+        <li><b>حافظه:</b> ۵ درس مرتبط با همین ارز و playbook، و آمار برد و باخت همین playbook روی همین ارز</li>
+        <li><b>قواعد ثابت داخل پرامپت:</b> کارمزد رفت‌وبرگشت ۰.۵ تا ۰.۶٪؛ حد سود کمتر از ۰.۹٪ ارزش نداره؛ میانگین کم کردن ممنوع؛ «skip» گزینه پیش‌فرضه مگر دلیل روشن وجود داشته باشه</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3 COMBOS -->
+  <section id="v-combos" hidden style="display:flex;flex-direction:column;gap:16px">
+    <p class="sub">شش کمبو. هر کدوم ۲.۵ میلیون تومان سرمایه مجازی داره و یک نسخه بدون LLM (baseline) برای سنجش اثر AI. سایزها به تومانن، چون حداقل سفارش به تومانه.</p>
+    <div id="cbox" style="display:flex;flex-direction:column;gap:16px"></div>
+  </section>
+
+  <!-- 4 MATRIX -->
+  <section id="v-matrix" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p class="sub">یک ارز در چند کمبو، با بازه‌هایی که LLM داخلشون تصمیم می‌گیره. سرمایه هر کمبو ۲.۵ میلیون تومانه.</p>
+    <div class="controls"><select id="mx" aria-label="انتخاب ارز"></select></div>
+    <div class="tablebox"><table><thead><tr><th>کمبو</th><th>اسکنر / نقش LLM</th><th>چه وقت فرصت ساخته میشه</th><th>بازه سایز</th><th>بازه SL</th><th>بازه TP</th><th>خروج زمانی</th></tr></thead><tbody id="mxtb"></tbody></table></div>
+  </section>
+
+  <!-- 5 SIZE -->
+  <section id="v-size" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="callout bad"><b>۱٪ از ۲.۵ میلیون = ۲۵ هزار تومان، که زیر حداقل سفارش (۵۰ هزار تومان) است</b>پس در تست کوچک‌ترین پوزیشن ۵۵ هزار تومانه، یعنی ۲.۲٪ سرمایه هر کمبو. سایزها به تومان تعریف شدن تا با ۲.۵ میلیون و ۵ میلیون یکسان کار کنن. درصد سود و افت در ۲.۵ میلیون بزرگ‌تر از اجرای واقعی با ۵ میلیون دیده میشه.</div>
+    <div class="tablebox"><table><thead><tr><th>کمبو</th><th>بازه سایز (تومان)</th><th>معادل درصد از ۲.۵M</th><th>معادل درصد از ۵M (اجرای واقعی)</th><th>حداکثر پوزیشن</th><th>سقف درگیری</th></tr></thead><tbody id="sztb"></tbody></table></div>
+    <div class="panel"><h2>قواعد مشترک (بدون تغییر)</h2>
+      <ul>
+        <li>کف خروج یکجا ۵۵ هزار تومان؛ کف خروج پله‌ای ۱۱۰ هزار تومان</li>
+        <li>مقدار رو به پایین گرد کن؛ اگه پله بیشتر از ۲۵٪ سایز باشه، اون ارز حذف</li>
+        <li>اگه ارزش پوزیشن به ۵۲ هزار تومان رسید، فوری با Market بفروش</li>
+        <li>LLM فقط داخل بازه کمبو عدد میده؛ عدد بیرون از بازه به نزدیک‌ترین مرز برگردونده میشه</li>
+      </ul></div>
+  </section>
+
+  <!-- 6 MODS -->
+  <section id="v-mods" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p class="sub">اسکنرها همون ماژول‌های نسخه ۱ هستن، با یک فرق: سیگنالشون دیگه مستقیم معامله نمیشه و فقط «کارت فرصت» برای LLM می‌سازن. آستانه‌ها کمی شل‌تر شدن تا LLM گزینه بیشتری برای انتخاب داشته باشه.</p>
+    <div class="tablebox"><table><thead><tr><th>کد</th><th>اسکنر</th><th>تایم‌فریم</th><th>شرط ساخت کارت فرصت</th><th>خروج پیش‌فرض</th><th>برگرفته از</th></tr></thead><tbody id="mtb"></tbody></table></div>
+  </section>
+
+  <!-- 7 COINS -->
+  <section id="v-coins" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p class="sub">۲۸ ارز تومانی «هسته»، همون فیلتر نسخه ۱ (داده API والکس، ۲۹ مهر ۱۴۰۵). C5 و C6 به همه ۲۸ ارز دسترسی دارن.</p>
+    <div class="controls"><select id="cf" aria-label="فیلتر وضعیت"><option value="core">فقط هسته</option><option value="skip">تومانی حذف‌شده</option><option value="usdt">تتری</option><option value="">همه</option></select><span class="foot" id="ccount"></span></div>
+    <div class="tablebox"><table><thead><tr><th>بازار</th><th>حجم ۲۴س (میلیون تومان)</th><th>اسپرد</th><th>ارزش هر پله</th><th>پله / ۶۰ هزار</th><th>دامنه ۲۴س</th><th>دلیل</th></tr></thead><tbody id="ctb"></tbody></table></div>
+  </section>
+
+  <!-- 8 RESEARCH -->
+  <section id="v-research" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p class="sub">رویکردهای LLM-محوری که در طراحی استفاده شدن.</p>
+    <div class="tablebox"><table><thead><tr><th>منبع</th><th>ایده</th><th>کجا استفاده شده</th></tr></thead><tbody id="rtb"></tbody></table></div>
+  </section>
+
+  <!-- 9 TEST -->
+  <section id="v-test" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="callout ok"><b>پیشنهاد: هر دو تست، با دو کار متفاوت</b>بک‌تست برای قسمت‌های قانون‌محور و پیدا کردن پارامترهاست. معیار اصلی برای قضاوت درباره LLM تست سایه‌ست، چون LLM ممکنه قیمت‌های گذشته رو از داده آموزشش «یادش باشه» و بک‌تست رو بیش از حد خوش‌بینانه نشون بده. تست سایه هم مستقیماً جزو جدول بارمه (۲۰ امتیاز بک‌تست و تست سایه).</div>
+    <div class="grid2">
+      <div class="panel"><h2>بک‌تست (شبانه)</h2>
+        <ul>
+          <li><b>داده:</b> کندل ۱ دقیقه والکس، ۲۸ ارز، ~۱۹ روز</li>
+          <li><b>نسخه‌های بدون LLM:</b> همه ۶ کمبو، با شبکه پارامترها، برای انتخاب آستانه اسکنرها و بازه‌های SL و TP</li>
+          <li><b>نسخه LLM روی بازه‌های نمونه:</b> ۳ روز نمونه با مدل ارزون یا Ollama محلی</li>
+          <li><b>کاهش خطر یادآوری قیمت:</b> اسم ارز و تاریخ واقعی در پرامپت بک‌تست ناشناس میشن</li>
+          <li><b>شبیه‌سازی:</b> کارمزد ۰.۲۵ و ۰.۳۰٪، لغزش قیمت، حداقل سفارش، پله مقدار</li>
+          <li><b>اعتبارسنجی:</b> walk-forward، یعنی ۱۲ روز برای تنظیم و ۷ روز برای سنجش</li>
+        </ul></div>
+      <div class="panel"><h2>تست سایه (زنده، بدون اجرای سفارش)</h2>
+        <ul>
+          <li><b>شروع:</b> امشب، هم‌زمان با بک‌تست</li>
+          <li><b>اجرا:</b> هر ۶ کمبو موازی با LLM واقعی؛ قیمت، اسپرد و دفتر سفارش زنده والکس</li>
+          <li><b>ثبت معامله فرضی:</b> هر «سفارش» با قیمت واقعی سمت مقابل دفتر سفارش + کارمزد ثبت میشه و بعد SL و TP با قیمت‌های زنده دنبال میشن</li>
+          <li><b>مقایسه مدل:</b> یک کمبو (مثلاً C6) با ۲ یا ۳ مدل مختلف هم‌زمان اجرا میشه</li>
+          <li><b>لاگ کامل:</b> ورودی، خروجی و دلیل LLM، که همون لاگ تحویلی چالشه</li>
+          <li><b>هزینه:</b> تقریباً ۲۰ تا ۶۰ فراخوانی LLM در ساعت برای هر کمبو</li>
+        </ul></div>
+    </div>
+    <div class="panel"><h2>معیار انتخاب کمبو</h2>
+      <div class="formula">score   = 0.60×rank(net_return_TMN) + 0.20×rank(−max_dd)
+        + 0.10×rank(trade_regularity) + 0.10×rank(stability)
+ai_lift = return(LLM version) − return(no-LLM baseline)   # must be > 0
+filters : net_return > 0, max_dd < combo.dd_cap, trades ≥ 15 / 2 days,
+          llm_error_rate < 5%, guardrail_clamps logged</div></div>
+    <div class="tablebox"><table><thead><tr><th>کمبو</th><th>پارامترهای بک‌تست (نسخه بدون LLM)</th><th>آنچه در تست سایه سنجیده میشه</th></tr></thead><tbody id="ttb"></tbody></table></div>
+  </section>
+</div>
+
+<script>
+const COINS = [{"k": "BTCUSDT", "q": "USDT", "v": 134305.0, "sp": 0.15, "sv": 224.43, "g60": 0.4, "rg": 2.7, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "PEPETMN", "q": "TMN", "v": 100463.0, "sp": 0.057, "sv": 1.23, "g60": 0.0, "rg": 8.2, "vol": "high", "combos": ["C1", "C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "ETHUSDT", "q": "USDT", "v": 87138.0, "sp": 0.149, "sv": 6671.41, "g60": 11.1, "rg": 3.8, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "PUMPTMN", "q": "TMN", "v": 70946.0, "sp": 0.462, "sv": 129.6, "g60": 0.2, "rg": 10.4, "vol": "high", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "BTCTMN", "q": "TMN", "v": 69389.0, "sp": 0.08, "sv": 224.5, "g60": 0.4, "rg": 5.1, "vol": "mid", "combos": ["C1", "C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "USOONTMN", "q": "TMN", "v": 60448.0, "sp": 0.009, "sv": 4213.69, "g60": 7.0, "rg": 4.0, "vol": "low", "combos": ["C3", "C5"], "status": "core", "why": "پله مقدار 4,214 تومان (7٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "ETHTMN", "q": "TMN", "v": 36079.0, "sp": 0.109, "sv": 6665.35, "g60": 11.1, "rg": 5.9, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": "پله مقدار 6,665 تومان (11٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "XRPTMN", "q": "TMN", "v": 33562.0, "sp": 0.265, "sv": 36618.2, "g60": 61.0, "rg": 7.5, "vol": "high", "combos": [], "status": "skip", "why": "پله مقدار 36,618 تومان (61٪ پوزیشن ۶۰ هزاری) — سایز دقیق و خروج پله‌ای ممکن نیست"}, {"k": "XRPUSDT", "q": "USDT", "v": 29704.0, "sp": 0.16, "sv": 36682.76, "g60": 61.1, "rg": 5.1, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "XAUTTMN", "q": "TMN", "v": 28701.0, "sp": 0.185, "sv": 11010.71, "g60": 18.4, "rg": 2.9, "vol": "low", "combos": [], "status": "skip", "why": "پله مقدار 11,011 تومان (18٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "USOONUSDT", "q": "USDT", "v": 28679.0, "sp": 0.006, "sv": 4208.69, "g60": 7.0, "rg": 3.7, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ARBTMN", "q": "TMN", "v": 27559.0, "sp": 0.654, "sv": 5.17, "g60": 0.0, "rg": 6.7, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "BNBTMN", "q": "TMN", "v": 23389.0, "sp": 0.196, "sv": 2000.0, "g60": 3.3, "rg": 4.0, "vol": "low", "combos": ["C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "SOLTMN", "q": "TMN", "v": 22695.0, "sp": 0.246, "sv": 287.15, "g60": 0.5, "rg": 5.3, "vol": "mid", "combos": ["C1", "C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "PEPEUSDT", "q": "USDT", "v": 22425.0, "sp": 0.217, "sv": 1.22, "g60": 0.0, "rg": 5.6, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "XAUTUSDT", "q": "USDT", "v": 22127.0, "sp": 0.053, "sv": 11002.94, "g60": 18.3, "rg": 0.6, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SOLUSDT", "q": "USDT", "v": 22116.0, "sp": 0.102, "sv": 287.23, "g60": 0.5, "rg": 3.2, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "DOGETMN", "q": "TMN", "v": 18641.0, "sp": 0.063, "sv": 2207.2, "g60": 3.7, "rg": 5.5, "vol": "mid", "combos": ["C1", "C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "TRXTMN", "q": "TMN", "v": 12967.0, "sp": 0.112, "sv": 8925.0, "g60": 14.9, "rg": 3.7, "vol": "low", "combos": [], "status": "skip", "why": "پله مقدار 8,925 تومان (15٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "STMN", "q": "TMN", "v": 12564.0, "sp": 0.192, "sv": 151.3, "g60": 0.3, "rg": 4.9, "vol": "mid", "combos": ["C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "APETMN", "q": "TMN", "v": 9108.0, "sp": 0.807, "sv": 396.79, "g60": 0.7, "rg": 7.4, "vol": "high", "combos": [], "status": "skip", "why": "اسپرد 0.807٪"}, {"k": "SUITMN", "q": "TMN", "v": 7860.0, "sp": 0.89, "sv": 2789.03, "g60": 4.6, "rg": 6.1, "vol": "mid", "combos": [], "status": "skip", "why": "اسپرد 0.89٪"}, {"k": "UNITMN", "q": "TMN", "v": 6689.0, "sp": 0.372, "sv": 20133.56, "g60": 33.6, "rg": 6.5, "vol": "mid", "combos": [], "status": "skip", "why": "پله مقدار 20,134 تومان (34٪ پوزیشن ۶۰ هزاری) — سایز دقیق و خروج پله‌ای ممکن نیست"}, {"k": "PUMPUSDT", "q": "USDT", "v": 6609.0, "sp": 1.566, "sv": 131.54, "g60": 0.2, "rg": 9.0, "vol": "high", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ARBUSDT", "q": "USDT", "v": 6084.0, "sp": 1.694, "sv": 5.14, "g60": 0.0, "rg": 5.7, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SUIUSDT", "q": "USDT", "v": 6045.0, "sp": 0.573, "sv": 2791.17, "g60": 4.7, "rg": 3.8, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ADATMN", "q": "TMN", "v": 6018.0, "sp": 0.337, "sv": 6047.1, "g60": 10.1, "rg": 6.2, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": "پله مقدار 6,047 تومان (10٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "APEUSDT", "q": "USDT", "v": 5874.0, "sp": 1.333, "sv": 401.59, "g60": 0.7, "rg": 5.5, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "LTCTMN", "q": "TMN", "v": 5796.0, "sp": 0.203, "sv": 164.49, "g60": 0.3, "rg": 5.8, "vol": "mid", "combos": ["C1", "C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "SANDTMN", "q": "TMN", "v": 5755.0, "sp": 0.225, "sv": 1551.8, "g60": 2.6, "rg": 4.0, "vol": "low", "combos": ["C2", "C3", "C4", "C5"], "status": "core", "why": ""}, {"k": "HYPETMN", "q": "TMN", "v": 5125.0, "sp": 0.419, "sv": 21595.91, "g60": 36.0, "rg": 5.6, "vol": "mid", "combos": [], "status": "skip", "why": "پله مقدار 21,596 تومان (36٪ پوزیشن ۶۰ هزاری) — سایز دقیق و خروج پله‌ای ممکن نیست"}, {"k": "DOGEUSDT", "q": "USDT", "v": 4563.0, "sp": 0.216, "sv": 2216.18, "g60": 3.7, "rg": 3.4, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "BNBUSDT", "q": "USDT", "v": 4537.0, "sp": 0.892, "sv": 2007.49, "g60": 3.3, "rg": 2.5, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SUSDT", "q": "USDT", "v": 4386.0, "sp": 1.054, "sv": 152.12, "g60": 0.3, "rg": 3.8, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SHIBTMN", "q": "TMN", "v": 4101.0, "sp": 0.284, "sv": 1.37, "g60": 0.0, "rg": 5.3, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "ADAUSDT", "q": "USDT", "v": 3819.0, "sp": 0.307, "sv": 6053.07, "g60": 10.1, "rg": 3.5, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "FILTMN", "q": "TMN", "v": 3730.0, "sp": 0.551, "sv": 2807.13, "g60": 4.7, "rg": 7.1, "vol": "high", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "AVAXTMN", "q": "TMN", "v": 3700.0, "sp": 0.136, "sv": 26.35, "g60": 0.0, "rg": 6.0, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "LTCUSDT", "q": "USDT", "v": 3669.0, "sp": 0.501, "sv": 164.49, "g60": 0.3, "rg": 3.6, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "LINKTMN", "q": "TMN", "v": 3543.0, "sp": 0.301, "sv": 33509.47, "g60": 55.8, "rg": 6.7, "vol": "mid", "combos": [], "status": "skip", "why": "پله مقدار 33,509 تومان (56٪ پوزیشن ۶۰ هزاری) — سایز دقیق و خروج پله‌ای ممکن نیست"}, {"k": "LINKUSDT", "q": "USDT", "v": 3435.0, "sp": 0.897, "sv": 33331.23, "g60": 55.6, "rg": 3.7, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "COPXONTMN", "q": "TMN", "v": 3124.0, "sp": 0.198, "sv": 2086.02, "g60": 3.5, "rg": 4.3, "vol": "low", "combos": ["C3", "C5"], "status": "core", "why": ""}, {"k": "UNIUSDT", "q": "USDT", "v": 3107.0, "sp": 0.667, "sv": 20141.08, "g60": 33.6, "rg": 4.6, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ENAUSDT", "q": "USDT", "v": 3062.0, "sp": 0.824, "sv": 579.51, "g60": 1.0, "rg": 15.9, "vol": "high", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "WLDTMN", "q": "TMN", "v": 2947.0, "sp": 0.734, "sv": 1519.05, "g60": 2.5, "rg": 5.8, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "GALATMN", "q": "TMN", "v": 2564.0, "sp": 0.569, "sv": 52.9, "g60": 0.1, "rg": 4.5, "vol": "mid", "combos": ["C3", "C5"], "status": "core", "why": ""}, {"k": "BCHTMN", "q": "TMN", "v": 2430.0, "sp": 0.716, "sv": 765.0, "g60": 1.3, "rg": 7.1, "vol": "high", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "CAKEUSDT", "q": "USDT", "v": 2281.0, "sp": 0.308, "sv": 5977.27, "g60": 10.0, "rg": 1.9, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ATOMTMN", "q": "TMN", "v": 2243.0, "sp": 0.618, "sv": 4723.83, "g60": 7.9, "rg": 4.5, "vol": "mid", "combos": ["C3", "C5"], "status": "core", "why": "پله مقدار 4,724 تومان (8٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "ENATMN", "q": "TMN", "v": 2125.0, "sp": 0.386, "sv": 581.45, "g60": 1.0, "rg": 18.4, "vol": "high", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "FILUSDT", "q": "USDT", "v": 2108.0, "sp": 4.769, "sv": 2803.67, "g60": 4.7, "rg": 6.0, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SLVONTMN", "q": "TMN", "v": 2075.0, "sp": 0.857, "sv": 13769.54, "g60": 22.9, "rg": 3.5, "vol": "low", "combos": [], "status": "skip", "why": "پله مقدار 13,770 تومان (23٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا؛ اسپرد 0.857٪"}, {"k": "WLDUSDT", "q": "USDT", "v": 2057.0, "sp": 0.699, "sv": 1515.93, "g60": 2.5, "rg": 5.0, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "PENGUUSDT", "q": "USDT", "v": 2027.0, "sp": 3.325, "sv": 220.08, "g60": 0.4, "rg": 4.1, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SHIBUSDT", "q": "USDT", "v": 2024.0, "sp": 0.772, "sv": 1.38, "g60": 0.0, "rg": 2.8, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "AAVETMN", "q": "TMN", "v": 1992.0, "sp": 0.32, "sv": 419.96, "g60": 0.7, "rg": 8.6, "vol": "high", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "HBARTMN", "q": "TMN", "v": 1880.0, "sp": 0.311, "sv": 229.19, "g60": 0.4, "rg": 6.8, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "COPXONUSDT", "q": "USDT", "v": 1836.0, "sp": 0.077, "sv": 2081.87, "g60": 3.5, "rg": 3.4, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "AVAXUSDT", "q": "USDT", "v": 1831.0, "sp": 0.505, "sv": 26.38, "g60": 0.0, "rg": 3.2, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SLVONUSDT", "q": "USDT", "v": 1798.0, "sp": 1.115, "sv": 13903.97, "g60": 23.2, "rg": 2.9, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "PENGUTMN", "q": "TMN", "v": 1719.0, "sp": 0.728, "sv": 216.7, "g60": 0.4, "rg": 4.8, "vol": "mid", "combos": ["C3", "C5"], "status": "core", "why": ""}, {"k": "SEITMN", "q": "TMN", "v": 1669.0, "sp": 0.651, "sv": 165.37, "g60": 0.3, "rg": 5.4, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "CAKETMN", "q": "TMN", "v": 1617.0, "sp": 0.673, "sv": 5974.3, "g60": 10.0, "rg": 4.6, "vol": "mid", "combos": ["C3", "C5"], "status": "core", "why": "پله مقدار 5,974 تومان (10٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا"}, {"k": "FLOKITMN", "q": "TMN", "v": 1536.0, "sp": 0.332, "sv": 6.67, "g60": 0.0, "rg": 5.3, "vol": "mid", "combos": ["C1", "C3", "C5"], "status": "core", "why": ""}, {"k": "DOTTMN", "q": "TMN", "v": 1320.0, "sp": 0.332, "sv": 3120.36, "g60": 5.2, "rg": 5.0, "vol": "mid", "combos": [], "status": "skip", "why": "پله مقدار 3,120 تومان (5٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا؛ نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "USDCUSDT", "q": "USDT", "v": 1082.0, "sp": 0.262, "sv": 2635.58, "g60": 4.4, "rg": 0.9, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "HYPEUSDT", "q": "USDT", "v": 1050.0, "sp": 0.014, "sv": 21515.52, "g60": 35.9, "rg": 3.4, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "POLTMN", "q": "TMN", "v": 1028.0, "sp": 0.709, "sv": 2569.1, "g60": 4.3, "rg": 6.0, "vol": "mid", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "FORMTMN", "q": "TMN", "v": 982.0, "sp": 0.673, "sv": 673.03, "g60": 1.1, "rg": 4.6, "vol": "mid", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "USDCTMN", "q": "TMN", "v": 967.0, "sp": 1.147, "sv": 2649.99, "g60": 4.4, "rg": 2.6, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 1.147٪"}, {"k": "IMXTMN", "q": "TMN", "v": 621.0, "sp": 5.707, "sv": 413.79, "g60": 0.7, "rg": 3.5, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 5.707٪"}, {"k": "TRXUSDT", "q": "USDT", "v": 602.0, "sp": 0.981, "sv": 8961.25, "g60": 14.9, "rg": 1.8, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "AAVEUSDT", "q": "USDT", "v": 579.0, "sp": 0.59, "sv": 419.67, "g60": 0.7, "rg": 5.6, "vol": "mid", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ATOMUSDT", "q": "USDT", "v": 538.0, "sp": 6.34, "sv": 4707.35, "g60": 7.8, "rg": 2.3, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ETCTMN", "q": "TMN", "v": 536.0, "sp": 1.143, "sv": 21.29, "g60": 0.0, "rg": 5.7, "vol": "mid", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 1.143٪"}, {"k": "GALAUSDT", "q": "USDT", "v": 534.0, "sp": 19.284, "sv": 52.92, "g60": 0.1, "rg": 3.6, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "FLOKIUSDT", "q": "USDT", "v": 416.0, "sp": 0.44, "sv": 6.65, "g60": 0.0, "rg": 3.5, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "BCHUSDT", "q": "USDT", "v": 388.0, "sp": 0.688, "sv": 762.72, "g60": 1.3, "rg": 1.9, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "TNSRTMN", "q": "TMN", "v": 360.0, "sp": 0.73, "sv": 88.07, "g60": 0.1, "rg": 6.8, "vol": "mid", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "ELONTMN", "q": "TMN", "v": 346.0, "sp": 5.122, "sv": 0.01, "g60": 0.0, "rg": 11.4, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 5.122٪"}, {"k": "SANDUSDT", "q": "USDT", "v": 331.0, "sp": 0.514, "sv": 1539.86, "g60": 2.6, "rg": 2.6, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "HBARUSDT", "q": "USDT", "v": 323.0, "sp": 1.511, "sv": 227.12, "g60": 0.4, "rg": 2.2, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "XLMUSDT", "q": "USDT", "v": 306.0, "sp": 2.519, "sv": 5045.91, "g60": 8.4, "rg": 3.3, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "ENJTMN", "q": "TMN", "v": 253.0, "sp": 0.422, "sv": 7.51, "g60": 0.0, "rg": 5.2, "vol": "mid", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "XLMTMN", "q": "TMN", "v": 206.0, "sp": 1.182, "sv": 4932.8, "g60": 8.2, "rg": 8.6, "vol": "high", "combos": [], "status": "skip", "why": "پله مقدار 4,933 تومان (8٪ پوزیشن ۶۰ هزاری) — فقط با سایز بزرگ‌تر و خروج یکجا؛ نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 1.182٪"}, {"k": "DOTUSDT", "q": "USDT", "v": 203.0, "sp": 0.765, "sv": 3079.72, "g60": 5.1, "rg": 2.1, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "PEOPLETMN", "q": "TMN", "v": 191.0, "sp": 2.072, "sv": 0.23, "g60": 0.0, "rg": 16.6, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 2.072٪"}, {"k": "AXSTMN", "q": "TMN", "v": 185.0, "sp": 0.586, "sv": 2.8, "g60": 0.0, "rg": 2.5, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "EIGENTMN", "q": "TMN", "v": 172.0, "sp": 2.17, "sv": 6.28, "g60": 0.0, "rg": 2.7, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 2.17٪"}, {"k": "SEIUSDT", "q": "USDT", "v": 169.0, "sp": 1.773, "sv": 161.17, "g60": 0.3, "rg": 1.2, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "POLUSDT", "q": "USDT", "v": 163.0, "sp": 2.062, "sv": 2579.73, "g60": 4.3, "rg": 3.2, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "COOKIETMN", "q": "TMN", "v": 145.0, "sp": 0.66, "sv": 25.93, "g60": 0.0, "rg": 9.4, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "FORMUSDT", "q": "USDT", "v": 142.0, "sp": 0.672, "sv": 689.35, "g60": 1.1, "rg": 2.7, "vol": "low", "combos": [], "status": "usdt", "why": "حداقل سفارش ۱ تتر ≈ ۲۶۶ هزار تومان (۵.۳٪ سرمایه) + ریسک نرخ تتر/تومان"}, {"k": "SUSHITMN", "q": "TMN", "v": 133.0, "sp": 0.798, "sv": 60.45, "g60": 0.1, "rg": 1.9, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 0.798٪"}, {"k": "MOGTMN", "q": "TMN", "v": 128.0, "sp": 2.083, "sv": 0.0, "g60": 0.0, "rg": 8.5, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 2.083٪"}, {"k": "ALICETMN", "q": "TMN", "v": 85.0, "sp": 0.686, "sv": 388.51, "g60": 0.6, "rg": 4.4, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)"}, {"k": "1INCHTMN", "q": "TMN", "v": 68.0, "sp": 0.928, "sv": 250.11, "g60": 0.4, "rg": 3.6, "vol": "low", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 0.928٪"}, {"k": "DYDXTMN", "q": "TMN", "v": 61.0, "sp": 0.893, "sv": 322.5, "g60": 0.5, "rg": 7.4, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 0.893٪"}, {"k": "CHZTMN", "q": "TMN", "v": 37.0, "sp": 0.953, "sv": 378.0, "g60": 0.6, "rg": 8.0, "vol": "high", "combos": [], "status": "skip", "why": "نقدشوندگی کم (کمتر از ۱.۵ میلیارد تومان در ۲۴ ساعت)؛ اسپرد 0.953٪"}];
+const MODS = [
+ ['M1','Bollinger Dip','5m','close < BB(20,2).lower × (1−d) و RSI14 < 30 و close < EMA50 و volume < 20×avg30 (فیلتر پامپ)','TP ثابت یا رسیدن به BB میانی، SL ثابت، خروج زمانی','Low_BB · ClucMay72018 · CombinedBinHAndCluc'],
+ ['M2','VWAP Revert / Reclaim','1m–5m','قیمت زیر VWAP−2σ (VWAP روزانه از ۰۰:۰۰ تهران)، بعد کندل برگشتی سبز با بسته شدن بالای high کندل قبل','TP روی VWAP−1σ یا خود VWAP، SL زیر کف −۰.۱۵٪','VWAP Reclaim · VWAP −2SD · RVWAP'],
+ ['M3','Volatility Breakout','5m (رنج ۴ ساعته)','قیمت > open سشن ۴ ساعته + k × رنج سشن قبل، و close > EMA200(5m) و حجم > ۱.۵×avg20','حد ضرر = ۰.۵ × رنج، trailing ATR، پایان سشن','Larry Williams Volatility Break-out · Upbit k-breakout'],
+ ['M4','Liquidity Sweep','15m','ویک زیر pivot low (L=10) و بسته شدن بالای اون، و z-score حجم > ۱.۵','SL زیر ویک − ۰.۲ATR، TP ۱.۵–۲R، BE در ۱R','Sweep & Reverse · Prior-Day Low Sweep'],
+ ['M5','Trend Pullback','5m با فیلتر 1h','close > EMA200 و EMA8 > EMA21، حداقل RSI در ۸ کندل < ۴۱، بعد کراس صعودی MACD','SL زیر کف پولبک / ۱.۵ATR، TP ۲R، trail روی EMA21','MACDRSI200 · 3-EMA Ribbon · EMA RSI ADX'],
+ ['M6','Squeeze Breakout','15m','BB داخل Keltner برای ≥ ۶ کندل، بعد آزاد شدن با مومنتوم مثبت و رو به بالا و حجم > ۱.۵×avg','مومنتوم ۲ کندل نزولی یا SL روی میانه Keltner','TTM Squeeze · SQZMOM_LB · Bollinger squeeze'],
+ ['M7','Volume-Spike Reversal','5m','کندل با z-score حجم ≥ ۳ در کف سوئینگ که در یک‌سوم بالایی‌اش بسته شده','TP روی VWAP یا ۱.۵R، SL زیر کف کندل','Reversal Volume Spike · Strategy005'],
+ ['M8','Relative Strength vs BTC','15m رتبه‌بندی','هر ۱۵ دقیقه آلت‌ها با بازده نسبی ۱ و ۴ ساعته نسبت به BTC رتبه‌بندی میشن؛ خرید top-3 در پولبک به EMA21','خروج وقتی رتبه از top-6 بیرون بیفته، یا SL/TP','Relative Strength vs Index (تطبیق کریپتو)'],
+ ['M9','ML Gate (XGBoost)','5m','مدل احتمال P(بازده ۳۰ دقیقه بعد > ۰.۸٪ بعد از کارمزد) رو با ویژگی‌های ATR، RSI، BB، حجم و رژیم BTC حساب می‌کنه؛ سیگنال ماژول‌ها فقط اگه p ≥ θ باشه اجرا میشه','—','XGBoost Mini · XGBoost cost-aware · BTC 1m NN'],
+ ['R','Regime Classifier','15m / 1h','برای هر ارز و برای BTC یکی از این برچسب‌ها: روند صعودی / رنج / پرنوسان نزولی / مرده (ADX، ATR٪، شیب EMA50، پهنای BB)','—','HMM + RF · BTC regime-switching']
+];
+
+const COMBOS = [
+ {id:'C1',name:'شکارچی مومنتوم (پرریسک)',en:'LLM Momentum Trader',goal:'بیشترین بازده؛ پذیرش افت تا ۱۵٪.',
+  coins:'ارزهای پرنوسان هسته: PEPE، PUMP، ENA، ARB، SOL، DOGE، AVAX، AAVE، BCH، FIL، WLD، SEI، HBAR، SHIB، FLOKI، LTC، BTC، ETH، ADA',
+  mods:['M3','M6','M8','R'],
+  size:[['بازه سایز','۵۵ تا ۱۶۵ هزار تومان؛ پیش‌فرض ۱۱۰ هزار'],['حداکثر پوزیشن','۵ (حداکثر ۲ میم‌کوین)'],['سقف درگیری','۲۵٪ = ۶۲۵ هزار تومان'],['بازه SL','۱.۵ تا ۳.۵٪'],['بازه TP','۲ تا ۸٪ (اختیاری: نصف در TP1)']],
+  llm:'تصمیم‌گیرنده اصلی: هر کارت فرصت شکست یا مومنتوم رو با خلاصه چند تایم‌فریم، حجم و جریان معاملات می‌سنجه و تصمیم می‌گیره «شکست واقعیه یا تله». سایز رو بر اساس اطمینانش داخل بازه انتخاب می‌کنه، SL رو پشت ساختار می‌ذاره و نقطه ابطال می‌نویسه.',
+  rules:'توقف روزانه در −۶٪ · حداکثر ۶ ورود در ساعت · ۲ SL پشت سر هم روی یک ارز → ۲ ساعت توقف همون ارز',
+  base:'baseline: شکست M3/M6 با پارامترهای ثابت، بدون LLM',dd:'۱۵٪',trades:'۸–۲۰ در روز'},
+ {id:'C2',name:'بازگشت به میانگین (کم‌ریسک)',en:'LLM Mean-Reversion Confirmer',goal:'نرخ برد بالا و معامله منظم؛ افت کمتر از ۴٪.',
+  coins:'ارزهای نقد با اسپرد کم: PEPE، BTC، SOL، DOGE، BNB، S، LTC، SAND',
+  mods:['M1','M2','R'],
+  size:[['سایز','۵۵ هزار تومان (ثابت)'],['حداکثر پوزیشن','۴'],['سقف درگیری','۹٪ = ۲۲۰ هزار تومان'],['بازه SL','۰.۸ تا ۱.۵٪'],['بازه TP','۰.۹ تا ۱.۵٪']],
+  llm:'تأییدکننده: تشخیص میده افت قیمت «بیش‌واکنش» است (برگشت‌پذیر) یا شروع یک روند نزولی. نشونه‌هایی که می‌بینه: جریان معاملات، دفتر سفارش، و این‌که BTC هم داره میریزه یا فقط همین ارز. اگه شک داشته باشه، پیش‌فرضش skip است.',
+  rules:'فقط در رژیم رنج (ADX14 در 15m کمتر از ۲۵) · ورود Limit (Maker) · توقف روزانه در −۲٪ · بدون میانگین کم کردن',
+  base:'baseline: هر سیگنال M1/M2 اجرا میشه',dd:'۴٪',trades:'۱۰–۳۰ در روز'},
+ {id:'C3',name:'تیم چندعاملی با مدیر ریسک',en:'Analyst + Risk-Manager Debate',goal:'امتیاز کامل مدیریت ریسک (۳۰) و منحنی سرمایه صاف.',
+  coins:'همه ۲۸ ارز هسته؛ ارزهای پله‌درشت فقط با خروج یکجا',
+  mods:['M4','M5','M1','R'],
+  size:[['سایز ریسک‌محور','ریسک هر معامله ۲,۵۰۰ تومان (۰.۱٪ از ۲.۵M) → size = 2,500 / SL%'],['محدوده سایز','۵۵ تا ۲۰۰ هزار تومان'],['گرمای پرتفوی','مجموع ریسک باز ≤ ۷,۵۰۰ تومان'],['سقف خوشه‌ها','میم ≤ ۲، ماژورها ≤ ۲، بقیه آلت‌ها ≤ ۲'],['بازه SL / TP','SL ساختاری ۰.۸ تا ۲.۵٪ · TP ۱.۵R تا ۳R']],
+  llm:'دو نقش با یک یا دو مدل. «تحلیلگر» پیشنهاد معامله با دلیل میده. «مدیر ریسک» اون رو به چالش می‌کشه: همبستگی با پوزیشن‌های باز، اسپرد، فاصله تا مقاومت، رژیم BTC. معامله فقط با تأیید مدیر ریسک انجام میشه. هر دو متن در لاگ ذخیره میشن.',
+  rules:'افت بیشتر از ۲٪ از سقف → ریسک نصف · افت بیشتر از ۴٪ → ۲ ساعت بدون ورود جدید · ۳ ضرر پشت سر هم → ۱ ساعت توقف · سود روز بیشتر از ۳٪ → ریسک نصف',
+  base:'baseline: همون اسکنرها و سایز ریسک‌محور، بدون تحلیلگر و مدیر ریسک',dd:'۵٪',trades:'۶–۱۵ در روز'},
+ {id:'C4',name:'سپر (کمترین افت)',en:'Shield: ML gate + LLM veto',goal:'کمترین افت (هدف زیر ۲٪) با سود کم ولی مثبت.',
+  coins:'۶ ارز خیلی نقد: BTC، SOL، DOGE، PEPE، LTC، BNB',
+  mods:['M4','M2','M9','R'],
+  size:[['سایز','۵۵ هزار تومان (ثابت)'],['حداکثر پوزیشن','۳'],['سقف درگیری','۶.۶٪ = ۱۶۵ هزار تومان'],['SL','۰.۶ تا ۰.۹٪، سفارش stop سمت سرور'],['TP','۱.۰ تا ۱.۵٪؛ BE در +۰.۶٪']],
+  llm:'دو کار داره. اول، وتوی فرصت‌هایی که مدل ML (M9) با احتمال ≥ ۰.۶ تأیید کرده؛ LLM فقط می‌تونه رد کنه، نه اضافه کنه. دوم، نگهبان ریسک: هر ۱۵ دقیقه وضعیت بازار رو خلاصه می‌کنه و می‌تونه «risk-off» اعلام کنه.',
+  rules:'قطع‌کن: افت BTC بیشتر از ۱.۲٪ در ۱۵ دقیقه یا بیشتر از ۳ خطای API در دقیقه → بستن همه و ۱ ساعت توقف · توقف روزانه در −۱٪',
+  base:'baseline: M4/M2 + فیلتر ML، بدون وتوی LLM',dd:'۲٪',trades:'۳–۱۰ در روز'},
+ {id:'C5',name:'LLM آزاد (بنچمارک)',en:'LLM-Native, no scanners',goal:'سنجیدن این‌که LLM بدون اسکنر چقدر خوبه؛ بیشترین نقش AI.',
+  coins:'همه ۲۸ ارز هسته',
+  mods:['R'],
+  size:[['بازه سایز','۵۵ تا ۱۱۰ هزار تومان'],['حداکثر پوزیشن','۴'],['سقف درگیری','۱۸٪ = ۴۴۰ هزار تومان'],['بازه SL / TP','SL ۱ تا ۳٪ (الزامی) · TP ۱.۵ تا ۶٪'],['تعداد ورود','حداکثر ۴ ورود در ساعت']],
+  llm:'هر ۱۵ دقیقه یک نمای کلی از ۲۸ ارز می‌گیره: بازده ۱۵ دقیقه، ۱ ساعت و ۴ ساعت، ATR٪، RSI، موقعیت نسبت به VWAP، حجم نسبی، اسپرد و رژیم BTC. خودش انتخاب می‌کنه چی بخره یا چی ببنده. اسکنری در کار نیست، شبیه مسابقه Alpha Arena.',
+  rules:'SL برای همه پوزیشن‌ها الزامی و سمت سرور · توقف روزانه در −۵٪ · کارمزد در پرامپت · حداقل ۳۰ دقیقه بین دو ورود روی یک ارز',
+  base:'baseline: خرید ۳ ارز برتر از نظر مومنتوم هر ۴ ساعت، با همون SL و TP',dd:'۱۰٪',trades:'۵–۲۰ در روز'},
+ {id:'C6',name:'ارکستراتور با حافظه (کاندید نهایی)',en:'Portfolio Orchestrator + Reflection',goal:'نسخه پیشنهادی برای اجرای واقعی: بهترین ترکیب پروفایل‌ها، با بیشترین نقش واقعی AI.',
+  coins:'همه ۲۸ ارز هسته',
+  mods:['R','M9','M1–M8'],
+  size:[['سایز','بر اساس پروفایلی که برای هر ارز انتخاب شده (C1 تا C4)'],['حداکثر پوزیشن','۶'],['سقف درگیری','۳۰٪ = ۷۵۰ هزار تومان'],['SL / TP','بازه همون پروفایل'],['تصمیم تخصیص','هر ۳۰ دقیقه']],
+  llm:'دو سطح تصمیم داره. سطح مدیر پرتفوی: هر ۳۰ دقیقه برای هر ارز یکی از پروفایل‌ها (C1 تا C4 یا خاموش) و یک ضریب ریسک رو انتخاب می‌کنه. سطح معامله: هر کارت فرصت رو مثل همون پروفایل تصمیم می‌گیره. بعد از هر معامله یک درس ثبت می‌کنه و هر ۲ ساعت حافظه رو خلاصه و وزن پروفایل‌ها رو به‌روز می‌کنه.',
+  rules:'گاردریل‌های ثابت: درگیری ≤ ۳۰٪ · توقف روزانه در −۴٪ · قواعد گرمای C3 · فقط ارزهای مجاز · اگه LLM جواب نده → روتر قانون‌محور',
+  base:'baseline: روتر قانون‌محور (رژیم → پروفایل)، بدون LLM و بدون حافظه',dd:'۶٪',trades:'۸–۲۵ در روز'}
+];
+const SIZES=[['C1','۵۵k – ۱۶۵k (پیش‌فرض ۱۱۰k)','۲.۲ – ۶.۶٪','۱.۱ – ۳.۳٪','۵','۲۵٪'],['C2','۵۵k','۲.۲٪','۱.۱٪','۴','۹٪'],['C3','۵۵k – ۲۰۰k (ریسک ۲,۵۰۰ تومان)','۲.۲ – ۸٪','۱.۱ – ۴٪','۶','۲۴٪'],['C4','۵۵k','۲.۲٪','۱.۱٪','۳','۶.۶٪'],['C5','۵۵k – ۱۱۰k','۲.۲ – ۴.۴٪','۱.۱ – ۲.۲٪','۴','۱۸٪'],['C6','طبق پروفایل','۲.۲ – ۸٪','۱.۱ – ۴٪','۶','۳۰٪']];
+const MATRIX = {
+ SOLTMN:[['C1','M3 شکست نوسان؛ LLM: شکست واقعی یا تله','شکست open + 0.5×رنج سشن ۴ ساعته','۵۵ – ۱۶۵k','۱.۵ – ۳.۵٪','۲ – ۸٪','۳ ساعت'],['C2','M1 دیپ بولینگر؛ LLM: بیش‌واکنش یا شروع ریزش','زیر BB پایین، RSI < 32، رژیم رنج','۵۵k','۰.۸ – ۱.۵٪','۰.۹ – ۱.۵٪','۶۰ دقیقه'],['C3','M4 شکار نقدینگی؛ تحلیلگر + مدیر ریسک','ویک زیر pivot 15m و برگشت','2,500 / SL → مثلاً SL ۱.۵٪ = ۱۶۷k','۰.۸ – ۲.۵٪ ساختاری','۱.۵R – ۳R','—'],['C4','M4 + ML ≥ ۰.۶؛ LLM فقط وتو','مثل C3، به علاوه روند صعودی','۵۵k','۰.۶ – ۰.۹٪ stop سرور','۱.۰ – ۱.۵٪','۴۵ دقیقه'],['C5','بدون اسکنر؛ LLM از نمای کلی انتخاب می‌کنه','هر ۱۵ دقیقه','۵۵ – ۱۱۰k','۱ – ۳٪','۱.۵ – ۶٪','به انتخاب LLM (حداکثر ۴ ساعت)'],['C6','پروفایل انتخابی مدیر پرتفوی','طبق پروفایل','طبق پروفایل','طبق پروفایل','طبق پروفایل','طبق پروفایل']],
+ PEPETMN:[['C1','M6 فشردگی؛ LLM: حجم و جریان معاملات واقعیه؟','آزاد شدن squeeze در 15m','۵۵ – ۱۶۵k','۲ – ۳.۵٪','۳ – ۸٪','۳ ساعت'],['C2','M2 بازگشت به VWAP؛ LLM تأیید','زیر VWAP−2σ و کندل برگشتی','۵۵k','۱ – ۱.۵٪','۰.۹ – ۱.۵٪','۶۰ دقیقه'],['C3','M1 دیپ؛ تحلیلگر + مدیر ریسک','زیر BB پایین ×(1−1٪)','SL ۲٪ → ۱۲۵k','۱.۵ – ۲.۵٪','۱.۵R – ۳R','—'],['C4','M2 + ML؛ LLM وتو','reclaim VWAP','۵۵k','۰.۹٪','۱.۲ – ۱.۵٪','۴۵ دقیقه'],['C5','بدون اسکنر','هر ۱۵ دقیقه','۵۵ – ۱۱۰k','۱.۵ – ۳٪','۲ – ۶٪','به انتخاب LLM'],['C6','طبق پروفایل','—','—','—','—','—']],
+ BTCTMN:[['C1','M3 شکست؛ BTC مرجع رژیم هم هست','شکست سشن ۴ ساعته','۵۵ – ۱۶۵k','۱.۵ – ۲.۵٪','۲ – ۵٪','۳ ساعت'],['C2','M1 دیپ؛ LLM تأیید','زیر BB پایین، RSI < 32','۵۵k','۰.۸ – ۱.۲٪','۰.۹ – ۱.۲٪','۶۰ دقیقه'],['C3','M5 پولبک روند؛ تحلیلگر + مدیر ریسک','بالای EMA200، کراس MACD بعد از RSI < 41','SL ۱٪ → ۲۰۰k (سقف)','۰.۸ – ۱.۵٪','۱.۵R – ۳R','—'],['C4','M4 + ML؛ LLM وتو','ویک زیر pivot','۵۵k','۰.۶ – ۰.۸٪ stop سرور','۱.۰ – ۱.۳٪','۴۵ دقیقه'],['C5','بدون اسکنر','هر ۱۵ دقیقه','۵۵ – ۱۱۰k','۱ – ۲٪','۱.۵ – ۴٪','به انتخاب LLM'],['C6','طبق پروفایل','—','—','—','—','—']],
+ DOGETMN:[['C1','M3 شکست؛ LLM','شکست سشن ۴ ساعته','۵۵ – ۱۶۵k','۲ – ۳.۵٪','۲ – ۶٪','۳ ساعت'],['C2','M1 دیپ؛ LLM تأیید','زیر BB پایین، رنج','۵۵k (پله ۲.۲ هزار تومان)','۱ – ۱.۵٪','۰.۹ – ۱.۵٪','۶۰ دقیقه'],['C3','M7 اسپایک حجم؛ تحلیلگر + مدیر ریسک','z-score حجم ≥ ۳ در کف','SL ۱.۸٪ → ۱۳۹k','۱.۲ – ۲.۵٪','۱.۵R – ۲.۵R','—'],['C4','M2 + ML؛ LLM وتو','reclaim VWAP','۵۵k','۰.۷ – ۰.۹٪','۱.۰ – ۱.۵٪','۴۵ دقیقه'],['C5','بدون اسکنر','هر ۱۵ دقیقه','۵۵ – ۱۱۰k','۱.۵ – ۳٪','۲ – ۶٪','به انتخاب LLM'],['C6','طبق پروفایل','—','—','—','—','—']],
+ PUMPTMN:[['C1','M6/M3؛ پرنوسان‌ترین ارز هسته','squeeze یا شکست','۵۵ – ۱۱۰k (سقف کمتر به خاطر نوسان)','۲.۵ – ۳.۵٪','۳ – ۸٪','۲ ساعت'],['C2','—','اسپرد ۰.۴۶٪؛ در C2 نیست','—','—','—','—'],['C3','M4؛ تحلیلگر + مدیر ریسک','ویک زیر pivot 15m','SL ۲.۵٪ → ۱۰۰k','۲ – ۲.۵٪','۲R (خروج یکجا)','—'],['C4','—','در لیست ۶ ارز C4 نیست','—','—','—','—'],['C5','بدون اسکنر','هر ۱۵ دقیقه','۵۵ – ۱۱۰k','۲ – ۳٪','۳ – ۶٪','به انتخاب LLM'],['C6','طبق پروفایل','—','—','—','—','—']]
+};
+const RES=[
+ ['TradingAgents (Xiao و همکاران، 2024)','https://arxiv.org/pdf/2412.20138','چند عامل با نقش‌های تحلیلگر، پژوهشگر خوش‌بین و بدبین، معامله‌گر و تیم ریسک که با هم بحث می‌کنن','C3 (تحلیلگر + مدیر ریسک)'],
+ ['TradingAgents-crypto (نسخه کریپتو)','https://github.com/auronsun/TradingAgents-crypto','پیاده‌سازی متن‌باز همون الگو برای کریپتو','مرجع کد برای C3'],
+ ['CryptoTrade: Reflective LLM agent (2024)','https://arxiv.org/html/2407.09546v1','ایجنت LLM برای کریپتو با «بازتاب» روی نتیجه معاملات قبلی','لایه بازتاب و حافظه در C6'],
+ ['FinMem (2023)','https://arxiv.org/pdf/2311.13743','حافظه لایه‌ای (کوتاه، میان و بلندمدت) برای ایجنت معامله‌گر','ساختار حافظه C6'],
+ ['Alpha Arena (nof1، 2025): درس‌ها','https://www.buildix.trade/blog/nof1-alpha-arena-lessons-ai-trading-byok-strategy-advisor-2026','LLMها با پول واقعی کریپتو ترید کردن. معامله زیاد = کارمزد بالا (Gemini با ۲۳۸ معامله، بیشتر از ۱۳٪ سرمایه کارمزد داد). مدل‌هایی که کم و با اطمینان بالا معامله کردن بهتر بودن. انتخاب مدل از پرامپت مهم‌تر بود','C5 (بنچمارک)، سقف تعداد ورود، SL اجباری، مقایسه مدل‌ها'],
+ ['Can Blindfolded LLMs Still Trade? (2026)','https://arxiv.org/html/2603.17692','بک‌تست LLM با اسم واقعی دارایی ممکنه به خاطر حافظه مدل خیلی خوش‌بینانه بشه؛ ناشناس‌سازی، کنترل منفی و چند بازه زمانی لازمه','ناشناس‌سازی در بک‌تست، اولویت با تست سایه'],
+ ['Survey: LLM agents in financial trading (2024)','https://arxiv.org/pdf/2408.06361','مرور معماری‌ها: LLM به‌عنوان معامله‌گر، تأییدکننده سیگنال، یا تولیدکننده آلفا','نقش «تأییدکننده» در C2 و C4']
+];
+const TESTS=[
+ ['C1','k ∈ {0.3, 0.5} · squeeze bars ∈ {6, 10} · vol mult ∈ {1.5, 2}','نرخ تشخیص تله؛ اثر سایز انتخابی LLM؛ تعداد معامله'],
+ ['C2','BB offset ∈ {0.3, 0.6%} · RSI ∈ {28, 32} · TP ∈ {0.9, 1.2%} · SL ∈ {1.0, 1.3%}','درصد skipهای درست (مقایسه با baseline)'],
+ ['C3','risk ∈ {1,500, 2,500, 4,000} TMN · heat ∈ {5k, 7.5k, 12k} · pivot L ∈ {5, 10}','نرخ رد شدن توسط مدیر ریسک و نتیجه معاملات ردشده'],
+ ['C4','θ ∈ {0.55, 0.6, 0.65} · SL ∈ {0.6, 0.8%} · TP ∈ {1.0, 1.3%}','افت حداکثر؛ تعداد وتوهای LLM و نتیجه‌شون'],
+ ['C5','فقط baseline (مومنتوم ۴ ساعته با top-k ∈ {2, 3})','کیفیت انتخاب آزاد LLM در برابر baseline؛ تعداد معامله (ریسک overtrading)'],
+ ['C6','نگاشت رژیم → پروفایل (۴ نسخه) · بازه تخصیص ∈ {30, 60} دقیقه','AI lift در برابر روتر قانون‌محور؛ مقایسه ۲–۳ مدل LLM']
+];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fa = n => String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const fmt = n => Number(n).toLocaleString('en-US');
+function renderCoins(){
+  const f=$('cf').value; const rows=COINS.filter(c=>!f||c.status===f).sort((a,b)=>b.v-a.v);
+  $('ccount').textContent=fa(rows.length)+' بازار';
+  $('ctb').innerHTML=rows.map(c=>{const st=c.g60>25?'s-bad':(c.g60>5?'s-warn':'s-ok');
+    return `<tr><td class="l mono">${c.k}</td><td class="num">${fmt(Math.round(c.v))}</td><td class="num">${c.sp}%</td><td class="num">${fmt(Math.round(c.sv))}</td><td><span class="chip ${c.q==='USDT'?'s-bad':st}">${c.q==='USDT'?'—':c.g60+'%'}</span></td><td class="num">${c.rg}%</td><td style="font-size:12.5px;color:var(--muted)">${esc(c.why)||'—'}</td></tr>`}).join('');
+}
+$('mtb').innerHTML = MODS.map(m=>`<tr><td class="mono" style="font-weight:600">${m[0]}</td><td class="l">${m[1]}</td><td class="l mono">${m[2]}</td><td>${esc(m[3])}</td><td>${esc(m[4])}</td><td class="l" style="font-size:12.5px;color:var(--muted)">${esc(m[5])}</td></tr>`).join('');
+$('cbox').innerHTML = COMBOS.map(c=>`<article class="combo"><div class="strip ${c.id}"></div><header><span class="chip ${c.id} tag">${c.id}</span><h2>${c.name}</h2><span class="mono" style="color:var(--muted)">${c.en}</span><span style="margin-inline-start:auto" class="foot">سقف افت هدف: <b>${c.dd}</b> · معاملات: <b>${c.trades}</b></span><p class="goal">${c.goal}</p></header>
+<div class="body">
+ <div><h3>نقش LLM (تصمیم‌گیرنده)</h3><p style="font-size:13px">${c.llm}</p></div>
+ <div><h3>ارزها و اسکنرها</h3><p style="font-size:13px">${c.coins}</p><p style="margin-top:6px">${c.mods.map(m=>`<span class="mod">${m}</span>`).join('')}</p></div>
+ <div><h3>بازه‌هایی که LLM داخلشون تصمیم می‌گیره</h3><dl class="kv">${c.size.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>
+ <div><h3>گاردریل‌های ثابت (کد)</h3><p style="font-size:13px">${c.rules}</p></div>
+ <div><h3>نسخه بدون LLM برای مقایسه</h3><p style="font-size:13px">${c.base}</p></div>
+</div></article>`).join('');
+$('mx').innerHTML = Object.keys(MATRIX).map(k=>`<option>${k}</option>`).join('');
+function renderMx(){ $('mxtb').innerHTML = MATRIX[$('mx').value].map(r=>`<tr><td><span class="chip ${r[0]}">${r[0]}</span></td>${r.slice(1).map(x=>`<td>${esc(x)}</td>`).join('')}</tr>`).join(''); }
+$('sztb').innerHTML = SIZES.map(r=>`<tr><td><span class="chip ${r[0]}">${r[0]}</span></td>${r.slice(1).map(x=>`<td>${x}</td>`).join('')}</tr>`).join('');
+$('rtb').innerHTML = RES.map(r=>`<tr><td class="l"><a href="${r[1]}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(r[0])}</a></td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join('');
+$('ttb').innerHTML = TESTS.map(t=>`<tr><td><span class="chip ${t[0]}">${t[0]}</span></td><td class="l mono" style="font-size:12.5px;white-space:normal">${esc(t[1])}</td><td>${esc(t[2])}</td></tr>`).join('');
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('section[id^="v-"]').forEach(s=>s.hidden = s.id!=='v-'+b.dataset.v);
+}));
+$('cf').addEventListener('input',renderCoins); $('mx').addEventListener('input',renderMx);
+renderCoins(); renderMx();
+
+</script>
