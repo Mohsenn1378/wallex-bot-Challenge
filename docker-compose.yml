@@ -1,0 +1,21 @@
+# Live run in Docker:  CODE_VERSION=$(git rev-parse --short HEAD) docker compose up -d --build
+# Logs: runs/<run-id>/supervisor.log, child.log, status.json (on the host, via the volumes below).
+# Stop safely: docker compose stop   (no orders are sent; restart resumes from live_state.json)
+services:
+  bot:
+    build:
+      context: .
+      args:
+        CODE_VERSION: ${CODE_VERSION:-unknown}
+    image: wallex-bot:live
+    env_file: .env                       # WALLEX_API_KEY, BOXAPI_API_KEY
+    command: ["--run-id", "live_20261022", "--accounts", "C7", "--llm", "box_sol61,box_sol6,box_sol56",
+              "--end", "2026-10-23 22:50"]
+    volumes:
+      - ./runs:/app/runs                 # live_state.json, orders.jsonl, status.json, smoke results
+      - ./data:/app/data                 # candles (keeps the 4-day history the features need)
+      - ./.cache:/app/.cache             # LLM ledgers (USD cap survives restarts)
+      - ./config:/app/config             # runtime.yaml hot controls + broker.yaml from the smoke test
+    stop_signal: SIGTERM
+    stop_grace_period: 120s              # executor.stop() joins its threads (<= 30 s) and saves state
+    restart: on-failure:3                # run_live.py already restarts the bot; this covers the supervisor

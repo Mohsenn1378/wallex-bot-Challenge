@@ -7,6 +7,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @functools.lru_cache(maxsize=1)
 def code_version() -> str:
+    env = os.environ.get("WALLEX_CODE_VERSION", "").strip()
+    if env and env != "unknown":                     # Docker image: no .git inside, version baked at build time
+        return env
     try:
         h = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True,
                            timeout=10).stdout.strip()

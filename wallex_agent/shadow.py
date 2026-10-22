@@ -666,7 +666,19 @@ class Shadow:
         return (self.last_j + 1 - len(acc.equity)) if acc.equity else 0
 
 
+def _stop_signals():
+    """Ctrl+C and SIGTERM (docker stop / supervisor) both mean: safe_stop - hooks detached, state saved, no orders.
+    SIGINT is re-armed explicitly because a process started in the background inherits 'ignore SIGINT'."""
+    import signal
+
+    def on_term(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGINT, signal.default_int_handler)
+    signal.signal(signal.SIGTERM, on_term)
+
+
 def main():
+    _stop_signals()
     ap = argparse.ArgumentParser()
     ap.add_argument("--llm", default=None, help="LLM profile (omit = baselines only)")
     ap.add_argument("--accounts", default="C1,C2,C3,C4,C5,C6")

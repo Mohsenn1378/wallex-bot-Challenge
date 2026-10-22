@@ -7,13 +7,20 @@ Supervisor for the real run (docs/IMPROVEMENT_PROPOSAL.md P0-08). Restarts the C
 - child output -> runs/<run-id>/child.log, own log -> runs/<run-id>/supervisor.log
 - restarts on a non-zero exit (max 30, 10 s apart) until --end. Ctrl+C: the child stops safely (no selling), no restart.
 """
-import argparse, glob, json, os, subprocess, sys, time
+import argparse, glob, json, os, signal, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 from wallex_agent.runtime import parse_tehran
 
 MAX_RESTARTS, RESTART_DELAY_S = 30, 10
+_STOP = {"sig": None}
+
+
+def _on_sigterm(signum, frame):
+    """docker stop / systemd: SIGTERM reaches only this process (PID 1), not the bot."""
+    _STOP["sig"] = signum
+    raise KeyboardInterrupt
 
 
 def log(path, msg):
@@ -77,6 +84,15 @@ def main():
     if why:
         log(slog, "REFUSED: " + why)
         sys.exit(2)
+    signal.signal(signal.SIGTERM, _on_sigterm)
+    try:
+        run(a, extra, end_ts, out, slog, clog)
+    except KeyboardInterrupt:                        # stopped while fetching / between restarts: no child running
+        log(slog, "stopped; supervisor exits (no restart)")
+        sys.exit(130)
+
+
+def run(a, extra, end_ts, out, slog, clog):
     restarts = 0
     while time.time() < end_ts:
         if not a.no_fetch:
@@ -93,9 +109,11 @@ def main():
             try:
                 rc = p.wait()
             except KeyboardInterrupt:
-                log(slog, "Ctrl+C: waiting for the child to save its state (it sends no sell orders)")
+                if _STOP["sig"] == signal.SIGTERM and p.poll() is None:
+                    p.send_signal(signal.SIGINT)     # a terminal Ctrl+C already reached the child; SIGTERM did not
+                log(slog, "stop requested: waiting for the child to save its state (it sends no sell orders)")
                 try:
-                    rc = p.wait(timeout=60)
+                    rc = p.wait(timeout=90)
                 except (KeyboardInterrupt, subprocess.TimeoutExpired):
                     p.kill()
                     rc = -1
