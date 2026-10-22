@@ -7,7 +7,7 @@ Supervisor for the real run (docs/IMPROVEMENT_PROPOSAL.md P0-08). Restarts the C
 - child output -> runs/<run-id>/child.log, own log -> runs/<run-id>/supervisor.log
 - restarts on a non-zero exit (max 30, 10 s apart) until --end. Ctrl+C: the child stops safely (no selling), no restart.
 """
-import argparse, glob, os, subprocess, sys, time
+import argparse, glob, json, os, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
@@ -38,8 +38,16 @@ def preflight() -> str | None:
         return f"cannot read {p}: {e}"
     if not isinstance(cfg.get("stop_supported"), bool):
         return "config/broker.yaml: stop_supported must be true/false (run the smoke test, P0-09)"
-    if not glob.glob(os.path.join(ROOT, "runs", "smoke", "*")):
-        return "runs/smoke/ is empty: run the real-order smoke test first (P0-09)"
+    ok = []
+    for f in glob.glob(os.path.join(ROOT, "runs", "smoke", "*.json")):
+        try:
+            r = json.load(open(f, encoding="utf-8"))
+        except Exception:
+            continue
+        if r.get("part") == 1 and not r.get("error") and r.get("broker_written") and not r.get("open_orders_end"):
+            ok.append(f)
+    if not ok:
+        return "no successful smoke test (part 1 without error, broker.yaml written) in runs/smoke/ (P0-09)"
     return None
 
 
