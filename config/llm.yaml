@@ -77,20 +77,62 @@ profiles:
     api_key_env: ANTHROPIC_API_KEY
     timeout_s: 45
 
+  # ---- live run: BoxAPI (OpenAI-compatible). Key in .env: BOXAPI_API_KEY. Own USD ledger (ledgers.boxapi) ----
+  box_sol61:
+    backend: openai_compat
+    base_url: https://ai.boxapi.ir/ai/v1
+    model: gpt-6.1-sol
+    api_key_env: BOXAPI_API_KEY
+    reasoning_effort: low          # gpt-6.1-sol: low|medium|high|xhigh|max (no none/minimal)
+    timeout_s: 40
+    max_output_tokens: 700
+    completion_headroom: 2500      # max_completion_tokens = 700 + 2500
+    ledger: boxapi
+    cache: false                   # live prompts are unique; never reuse an old answer
+    price_usd_per_m: {input: 2.0, cached_input: 0.10, output: 10.0}   # public list price; verify vs BoxAPI dashboard
+    # user_agent: "opencode/1.19.3"   # only if Cloudflare blocks the default
+  box_sol6:
+    backend: openai_compat
+    base_url: https://ai.boxapi.ir/ai/v1
+    model: gpt-6-sol
+    api_key_env: BOXAPI_API_KEY
+    reasoning_effort: low
+    timeout_s: 40
+    max_output_tokens: 700
+    completion_headroom: 2500
+    ledger: boxapi
+    cache: false
+    price_usd_per_m: {input: 2.0, cached_input: 0.20, output: 10.0}
+  box_sol56:
+    backend: openai_compat
+    base_url: https://ai.boxapi.ir/ai/v1
+    model: gpt-5.6-sol
+    api_key_env: BOXAPI_API_KEY
+    reasoning_effort: low
+    timeout_s: 45
+    max_output_tokens: 700
+    completion_headroom: 2500
+    ledger: boxapi
+    cache: false
+    price_usd_per_m: {input: 4.0, cached_input: 0.40, output: 20.0}
+
 # Which profile each agent role uses. A list = fallback chain (next one is tried if the first fails).
+# A single-name --llm override keeps the chain members that share its ledger as fallbacks.
 roles:
-  decide:        [sol56, terra56]
-  risk_manager:  [sol56, terra56]
-  orchestrator:  [sol56, terra56]
-  native:        [sol56, terra56]
-  reflect:       [luna56, sol56]
+  decide:        [box_sol61, box_sol6, box_sol56]
+  native:        [box_sol61, box_sol6, box_sol56]
+  reflect:       [box_sol61, box_sol6, box_sol56]
+  risk_manager:  [sol56, terra56]      # C3 only (offline)
+  orchestrator:  [sol56, terra56]      # C6 only (offline)
   card_eval:     [luna56]
 
 defaults:
   temperature: 0
-  json_retries: 2
-  max_parallel_calls: 4
-  calls_per_hour: 300
-  token_budget_total: 900000   # ~65k already spent before the ledger existed   # whole CodeCraft budget is 1M tokens; keep a safety margin
+  json_retries: 1
+  max_parallel_calls: 2
+  calls_per_hour: 120
   max_output_tokens: 600          # hard cap; protects subscription/plan limits
-  cache: true                  # identical prompt+profile -> cached answer (needed for replay & reproducibility)
+  cache: true                     # global default stays true (offline tests/replay); box profiles override with false
+  ledgers:                        # ledger dir: env LLM_LEDGER_DIR (default .cache)
+    codecraft: {token_cap: 900000}                              # whole CodeCraft budget is 1M tokens; safety margin
+    boxapi:    {usd_cap: 2.7, low_priority_stop_frac: 0.8}      # env LLM_BUDGET_USD overrides usd_cap

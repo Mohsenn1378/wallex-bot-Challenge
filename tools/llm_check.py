@@ -25,8 +25,11 @@ for i in range(a.n):
     r = llm.decide(SYSTEM, PROMPT + f"\n(check #{i})", SCHEMA, use_cache=False)
     ok += r.ok
     print(f"#{i}: ok={r.ok} profile={r.profile} latency={r.latency_s:.1f}s attempts={r.attempts} "
-          f"tokens={(r.usage or {}).get('total_tokens', '?')} "
+          f"tokens={(r.usage or {}).get('total_tokens', '?')} cost=${r.cost_usd:.4f} "
           f"{'data=' + json.dumps(r.data, ensure_ascii=False) if r.ok else 'error=' + str(r.error)}")
-print(f"ledger total so far: {llm.ledger.used_total():,} tokens")
+print(f"chain: {llm.names}")
+for led in llm.ledgers:
+    cap = f" / cap ${led.usd_cap:.2f}" if led.usd_cap else (f" / cap {led.token_cap:,}" if led.token_cap else "")
+    print(f"ledger '{led.name}' ({led.path}): {led.used_total():,} tokens, ${led.used_usd():.4f}{cap}")
 print(f"\n{ok}/{a.n} valid. ", "READY" if ok == a.n else "NOT READY — fix the profile before running tests")
 sys.exit(0 if ok == a.n else 1)

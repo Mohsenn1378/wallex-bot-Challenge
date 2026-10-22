@@ -8,7 +8,8 @@ import numpy as np
 
 from .combos import COMBOS
 from .policies import DECISION_SCHEMA, baseline_plan
-from .llm.adapter import LLM, ROOT
+from .llm.adapter import LLM, ROOT, PRIORITY_HIGH, PRIORITY_NORMAL, PRIORITY_LOW
+from .version import code_version
 
 PROMPTS = os.path.join(ROOT, "prompts")
 PROMPT_VERSION = "v1"
@@ -18,12 +19,18 @@ def _p(name):
     return open(os.path.join(PROMPTS, f"{name}_{PROMPT_VERSION}.md"), encoding="utf-8").read()
 
 
-def log_call(path, role, r, payload, extra=None):
-    """Append one LLM call (input, output, latency, errors) to a JSONL decision log."""
+def _rec(role, r, payload, prompt_version):
+    return {"t": time.time(), "role": role, "ok": r.ok, "latency_s": round(r.latency_s, 2), "profile": r.profile,
+            "cached": r.cached, "attempts": r.attempts, "error": r.error, "cost_usd": round(r.cost_usd, 6),
+            "usage": r.usage, "code_version": code_version(), "prompt_version": prompt_version,
+            "output": r.data, "input": payload}
+
+
+def log_call(path, role, r, payload, extra=None, prompt_version=PROMPT_VERSION):
+    """Append one LLM call (input, output, latency, cost, errors) to a JSONL decision log."""
     if not path:
         return
-    rec = {"t": time.time(), "role": role, "ok": r.ok, "latency_s": round(r.latency_s, 2), "profile": r.profile,
-           "cached": r.cached, "attempts": r.attempts, "error": r.error, "output": r.data, "input": payload}
+    rec = _rec(role, r, payload, prompt_version)
     if extra:
         rec.update(extra)
     with open(path, "a", encoding="utf-8") as f:
@@ -147,9 +154,8 @@ class LLMPolicy:
         self.cb = ContextBuilder(m, F, R, self.anonymize)
 
     def _log(self, role, r, payload):
-        rec = {"t": time.time(), "role": role, "ok": r.ok, "latency_s": round(r.latency_s, 2), "profile": r.profile,
-               "cached": r.cached, "attempts": r.attempts, "error": r.error, "output": r.data, "input": payload}
-        self.calls.append({k: rec[k] for k in ("role", "ok", "latency_s", "cached", "error")})
+        rec = _rec(role, r, payload, PROMPT_VERSION)
+        self.calls.append({k: rec[k] for k in ("role", "ok", "latency_s", "cached", "error", "cost_usd")})
         if self.log_path:
             with open(self.log_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
@@ -163,7 +169,7 @@ class LLMPolicy:
             rel = [l for l in self.lessons if l[0] == asset or l[1] == card.scanner][-5:]
             payload["lessons_from_past_trades"] = [f"[{t}] {txt}" for _, _, t, txt in rel]
         prompt = "Opportunity card and context (JSON):\n" + json.dumps(payload, ensure_ascii=False)
-        r = self.llm.decide(self.sys_decide, prompt, DECISION_SCHEMA)
+        r = self.llm.decide(self.sys_decide, prompt, DECISION_SCHEMA, priority=PRIORITY_HIGH, role="decide")
         self._log("decide", r, payload)
         if not r.ok:
             raise RuntimeError(f"LLM decide failed: {r.error}")
@@ -183,7 +189,8 @@ class LLMPolicy:
             rr = self.llm_risk.decide(self.sys_risk, "Analyst proposal and context (JSON):\n" + json.dumps(prop, ensure_ascii=False),
                                       {"type": "object", "required": ["approve", "reason"],
                                        "properties": {"approve": {"type": "boolean"},
-                                                      "risk_mult": {"type": "number", "minimum": 0.25, "maximum": 1}}})
+                                                      "risk_mult": {"type": "number", "minimum": 0.25, "maximum": 1}}},
+                                      priority=PRIORITY_HIGH, role="risk_manager")
             self._log("risk_manager", rr, prop)
             if not rr.ok:
                 raise RuntimeError(f"LLM risk manager failed: {rr.error}")
@@ -211,7 +218,8 @@ class Reflector:
                 "exit_reason": trade.exit_reason, "hold_min": round((trade.exit_t - trade.entry_t) / 60),
                 "thesis": trade.decision.get("thesis"), "regime_at_entry": trade.regime}
         r = self.llm.decide(self.sys, json.dumps(data, ensure_ascii=False),
-                            {"type": "object", "required": ["lesson"], "properties": {"lesson": {"type": "string"}}})
+                            {"type": "object", "required": ["lesson"], "properties": {"lesson": {"type": "string"}}},
+                            priority=PRIORITY_LOW, role="reflect")
         log_call(self.log_path, "reflect", r, data)
         return (r.data or {}).get("lesson"), (r.data or {}).get("tag", "neutral")
 
@@ -234,7 +242,8 @@ class Orchestrator:
                                  "rsi_15m": (v.get("15m") or {}).get("rsi")}
         payload = {"coins": table, "market": cb.market_view(j), "recent_lessons": [l[3] for l in lessons[-10:]]}
         r = self.llm.decide(self.sys, json.dumps(payload, ensure_ascii=False),
-                            {"type": "object", "required": ["assign"], "properties": {"assign": {"type": "object"}}})
+                            {"type": "object", "required": ["assign"], "properties": {"assign": {"type": "object"}}},
+                            priority=PRIORITY_NORMAL, role="orchestrator")
         log_call(self.log_path, "orchestrator", r, payload)
         if r.ok:
             inv = {cb.name(s): cb.m.symbols[s] for s in coins}
@@ -259,7 +268,8 @@ class Native:
             table[cb.name(s)].update({"15m": v.get("15m"), "regime": cb.R.at(j, s)["coin"]})
         payload = {"coins": table, "market": cb.market_view(j), "portfolio": state, "allowed_bands": bands}
         r = self.llm.decide(self.sys, json.dumps(payload, ensure_ascii=False),
-                            {"type": "object", "required": ["buys"], "properties": {"buys": {"type": "array", "maxItems": 2}}})
+                            {"type": "object", "required": ["buys"], "properties": {"buys": {"type": "array", "maxItems": 2}}},
+                            priority=PRIORITY_NORMAL, role="native")
         log_call(self.log_path, "native", r, payload)
         inv = {cb.name(s): s for s in coins}
         out = []

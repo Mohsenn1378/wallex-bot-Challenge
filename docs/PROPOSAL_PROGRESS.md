@@ -5,7 +5,7 @@
 | id | وضعیت | زمان (تهران) | نتیجه تست | مشکل / یادداشت |
 |---|---|---|---|---|
 | P0-00 | بخش ایجنت انجام شد؛ منتظر محسن | 2026-10-22 | T1: `15/15 passed`؛ `git check-ignore .env .cache runs data` ← هر چهار مسیر | `.env` وجود ندارد ← کلید BoxAPI ثبت نشده (کار محسن). تنظیمات برق/Update/QuickEdit ویندوز روی این Mac کاربرد ندارد. |
-| P0-01 | pending | | | |
+| P0-01 | done (بخش آفلاین) | 2026-10-22 | T2: `9/9 passed` (pytest هم سبز)؛ T1 `15/15` | T9 (`llm_check --llm box_sol61`) اجرا نشد: `.env`/کلید BoxAPI نیست. `max_completion_tokens` با کلید پروفایل `completion_headroom` (box=2500، بقیه پیش‌فرض قدیمی 4000). سقف دلاری در هر check از env `LLM_BUDGET_USD` خوانده می‌شود (قابل افزایش). بسته بودن بودجه یک درگاه ← پروفایل بعدی زنجیره (اگر دفتر دیگری دارد). `code_version` در `wallex_agent/version.py`. |
 | P0-02 | pending | | | |
 | P0-03 | pending | | | |
 | P0-04 | pending | | | |
