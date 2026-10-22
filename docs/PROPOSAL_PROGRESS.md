@@ -7,7 +7,7 @@
 | P0-00 | بخش ایجنت انجام شد؛ منتظر محسن | 2026-10-22 | T1: `15/15 passed`؛ `git check-ignore .env .cache runs data` ← هر چهار مسیر | `.env` وجود ندارد ← کلید BoxAPI ثبت نشده (کار محسن). تنظیمات برق/Update/QuickEdit ویندوز روی این Mac کاربرد ندارد. |
 | P0-01 | done (بخش آفلاین) | 2026-10-22 | T2: `9/9 passed` (pytest هم سبز)؛ T1 `15/15` | T9 (`llm_check --llm box_sol61`) اجرا نشد: `.env`/کلید BoxAPI نیست. `max_completion_tokens` با کلید پروفایل `completion_headroom` (box=2500، بقیه پیش‌فرض قدیمی 4000). سقف دلاری در هر check از env `LLM_BUDGET_USD` خوانده می‌شود (قابل افزایش). بسته بودن بودجه یک درگاه ← پروفایل بعدی زنجیره (اگر دفتر دیگری دارد). `code_version` در `wallex_agent/version.py`. |
 | P0-02 | done | 2026-10-22 | T3: `7/7 passed`؛ کل `pytest tests/` سبز | تصمیم امن: کلید ناشناخته (مثلاً غلط تایپی `pause_entry`) کل فایل را نامعتبر می‌کند؛ فایل نامعتبر در اولین بار ← پیش‌فرض‌ها با `pause_entries: true`. ترتیب زمان‌ها هم چک می‌شود (`no_new_entries_after ≤ flatten_start ≤ hard_deadline`). `set_profile` روی `LLMPolicy`، `Native`، `Reflector` (و `Orchestrator`). اعمال در حلقه = P0-06. |
-| P0-03 | pending | | | |
+| P0-03 | done | 2026-10-22 | `COMBOS["C7"]` چاپ شد (۹ ارز، size_tiers) | — |
 | P0-04 | pending | | | |
 | P0-05 | pending | | | |
 | P0-06 | pending | | | |

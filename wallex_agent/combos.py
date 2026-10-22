@@ -41,9 +41,24 @@ COMBOS = {
                coins=LIQUID_PLUS, max_pos=6, max_exposure=0.30, cluster_caps={"meme": 2}, daily_stop=0.04,
                entries_per_hour=6, sl_cooldown=(2, 120), router_every=30, dd_cap=0.06,
                profile_by_regime={"trend_up": "C3", "range": "C2", "down": "C4", "dead": None}),
+    # Live run 2026-10-22/23 (docs/IMPROVEMENT_PROPOSAL.md §5.2): one agent on the full 5M. Arm on the first M1
+    # signal, trigger on a repeat signal or a >= 8% drop from the 6h high; the LLM picks the size tier.
+    "C7": dict(name="Unified evidence-calibrated dip agent (LLM decides)", scanners=["M1"], native=True,
+               min_liq=0.0, coins=LIQUID,
+               size=150_000, size_band=(65_000, 220_000),
+               size_tiers={"probe": 65_000, "standard": 150_000, "high": 220_000},
+               risk_cap_pct=0.003, heat_cap_pct=0.015, stop_limit_offset=0.015,   # eff = sl + 1.5% + 0.6% fees
+               sl_band=(4.5, 5.0), base_sl=5.0, tp_band=(5.0, 7.0), base_tps=[(6.0, 1.0)], time_stop=1440,
+               be_pct=0, trail_atr=0, time_stop_min_profit=0, limit_valid=10,     # explicit: no BE / trailing
+               max_pos=6, max_exposure=0.50, cluster_caps={"meme": 3}, entries_per_hour=3, sl_cooldown=(1, 240),
+               daily_stop=0.99, dd_soft=0.02, dd_hard=0.04, dd_resume=0.03,
+               btc15_block=-0.005, arm_window_min=360, arm_dd_pct=-8.0,
+               night_hours=(0, 6), night_tier_cap="standard",
+               entry="market", regime_ok=None, need_btc_bull=False, dd_cap=0.04),
 }
 
-PROFILE_SCANNERS = {"C1": {"M1", "M4", "M7"}, "C2": {"M1", "M2"}, "C3": {"M4", "M1", "M5"}, "C4": {"M4", "M1"}}
+PROFILE_SCANNERS = {"C1": {"M1", "M4", "M7"}, "C2": {"M1", "M2"}, "C3": {"M4", "M1", "M5"}, "C4": {"M4", "M1"},
+                    "C7": {"M1"}}
 
 
 def cluster(sym: str) -> str:
