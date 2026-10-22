@@ -134,14 +134,30 @@ def bands_of(profile):
     return out
 
 
-class LLMPolicy:
+class _HotSwap:
+    """set_profile(s): rebuild the LLM chain(s) only when the profile string actually changes (runtime.yaml)."""
+    ROLES = ()
+
+    def _build(self, llm_profile):
+        self.llm_profile = llm_profile
+        for attr, role in self.ROLES:
+            setattr(self, attr, LLM.from_config(role=role, override=llm_profile))
+
+    def set_profile(self, llm_profile) -> bool:
+        if llm_profile == self.llm_profile:
+            return False
+        self._build(llm_profile)
+        return True
+
+
+class LLMPolicy(_HotSwap):
     """C1/C2 (full decision), C4 (veto only), C3 (analyst + risk manager), C6 (decide inside assigned playbook)."""
+    ROLES = (("llm", "decide"), ("llm_risk", "risk_manager"))
 
     def __init__(self, cid: str, llm_profile: str | None = None, anonymize=False, log_path=None):
         self.cid = cid
         self.name = f"llm:{llm_profile or 'default'}"
-        self.llm = LLM.from_config(role="decide", override=llm_profile)
-        self.llm_risk = LLM.from_config(role="risk_manager", override=llm_profile)
+        self._build(llm_profile)
         self.anonymize = anonymize
         self.cb = None
         self.calls = []        # per-call log (prompt hash, latency, ok, error)
@@ -206,10 +222,11 @@ class LLMPolicy:
         return dec
 
 
-class Reflector:
+class Reflector(_HotSwap):
     """After a closed trade, the LLM writes one reusable lesson (C6 memory)."""
+    ROLES = (("llm", "reflect"),)
     def __init__(self, llm_profile=None, log_path=None):
-        self.llm = LLM.from_config(role="reflect", override=llm_profile)
+        self._build(llm_profile)
         self.sys = _p("reflect")
         self.log_path = log_path
 
@@ -224,10 +241,11 @@ class Reflector:
         return (r.data or {}).get("lesson"), (r.data or {}).get("tag", "neutral")
 
 
-class Orchestrator:
+class Orchestrator(_HotSwap):
     """C6: every 30 min the LLM assigns each coin a playbook (C2/C3/C4/off)."""
+    ROLES = (("llm", "orchestrator"),)
     def __init__(self, llm_profile=None, log_path=None):
-        self.llm = LLM.from_config(role="orchestrator", override=llm_profile)
+        self._build(llm_profile)
         self.sys = _p("orchestrator")
         self.log_path = log_path
         self.assign, self.risk_mult, self.note = {}, 1.0, ""
@@ -253,10 +271,11 @@ class Orchestrator:
         return r
 
 
-class Native:
+class Native(_HotSwap):
     """C5: the LLM sees a table of liquid coins every 15 min and picks up to 2 buys (no scanner)."""
+    ROLES = (("llm", "native"),)
     def __init__(self, llm_profile=None, log_path=None):
-        self.llm = LLM.from_config(role="native", override=llm_profile)
+        self._build(llm_profile)
         self.sys = _p("native")
         self.log_path = log_path
 
