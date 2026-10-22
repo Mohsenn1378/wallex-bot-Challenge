@@ -200,6 +200,7 @@ class WallexClient(RoundingMixin):
         self._rules: dict[str, dict] = {}
         self._log_lock = threading.Lock()
         self._warned_locked = False
+        self.log_tags: dict = {}               # code_version / llm_profile / prompt_version (set by the runner)
 
     def __repr__(self):                       # never expose the key
         return f"WallexClient(base={self.base!r}, key={'set' if self._key else 'missing'})"
@@ -208,7 +209,7 @@ class WallexClient(RoundingMixin):
     def _log(self, rec: dict):
         if not self.log_path:
             return
-        rec = {"ts": round(time.time(), 3), **rec}
+        rec = {"ts": round(time.time(), 3), **rec, **self.log_tags}
         try:
             line = json.dumps(rec, ensure_ascii=False, default=str)
         except Exception:

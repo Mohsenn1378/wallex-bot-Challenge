@@ -531,7 +531,9 @@ class LLM:
                     except LLMError as e:
                         last_err = f"{be.name}: {e}"
                         break  # budget closed for this gateway -> next backend (if on another ledger)
-                self.limiter.acquire()
+                limited = not isinstance(be, Mock)        # the offline mock is never rate-limited
+                if limited:
+                    self.limiter.acquire()
                 try:
                     raw, usage = be.complete(system, p)
                     if be.ledger is not None:
@@ -542,7 +544,8 @@ class LLM:
                     last_err = f"{be.name}: {e}"
                     break  # transport error -> next backend in chain
                 finally:
-                    self.limiter.release()
+                    if limited:
+                        self.limiter.release()
                 data = extract_json(raw)
                 errs = validate(data, schema) if (schema and data is not None) else ([] if data is not None else ["no JSON object found"])
                 if not errs:

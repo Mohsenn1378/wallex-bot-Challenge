@@ -145,6 +145,7 @@ class LiveExecutor:
         self._eq_cache = (0.0, None)
         self._eq_lock = threading.Lock()
         self.flatten_report = {"passes": [], "done": False}
+        self.tags: dict = {}                     # llm_profile / prompt_version, refreshed by the runner
         coins = self.cfg.get("coins") or getattr(account, "allowed", None) or list(account.m.symbols)
         self.coins = sorted(s for s in coins if str(s).endswith("TMN"))
 
@@ -242,6 +243,10 @@ class LiveExecutor:
             ok = text is not None and write_text_retry(self.state_path, text)
         if not ok:
             self._event("state_write_failed")
+
+    def save_state(self):
+        """Called by the main loop every cycle (main thread: engine counters are snapshotted too)."""
+        self._save_state()
 
     def _load_state(self) -> bool:
         if not os.path.exists(self.state_path):
@@ -714,7 +719,8 @@ class LiveExecutor:
                "qty": rec.get("qty"), "entry_px": rec.get("avg_px"), "exit_px": ex.get("px"), "exit_qty": sold_q,
                "fees": round(entry_fees + fee, 2), "pnl_tmn": round(pnl, 2), "exit_reason": why,
                "paper_reason": reason, "status": rec["status"], "size_tier": rec.get("size_tier"),
-               "thesis": rec.get("thesis"), "code_version": self.cfg.get("code_version", "")}
+               "thesis": rec.get("thesis"), "code_version": self.cfg.get("code_version", ""),
+               "llm_profile": self.tags.get("llm_profile"), "prompt_version": self.tags.get("prompt_version")}
         self._write_trade(row)
         if acc is not None and hasattr(acc, "patch_close") and pos is not None:
             try:
