@@ -7,16 +7,23 @@ import json, math, os, time
 import numpy as np
 
 from .combos import COMBOS
-from .policies import DECISION_SCHEMA, baseline_plan
+from .policies import DECISION_SCHEMA, NATIVE_SCHEMA, baseline_plan
 from .llm.adapter import LLM, ROOT, PRIORITY_HIGH, PRIORITY_NORMAL, PRIORITY_LOW
 from .version import code_version
 
 PROMPTS = os.path.join(ROOT, "prompts")
 PROMPT_VERSION = "v1"
+# Per-account prompt versions. v1 files stay untouched (C1..C6); there is no reflect_v2.
+PROMPT_VERSIONS = {"C7": {"decide": "v2", "native": "v2", "reflect": "v1"}}
 
 
-def _p(name):
-    return open(os.path.join(PROMPTS, f"{name}_{PROMPT_VERSION}.md"), encoding="utf-8").read()
+def prompt_versions(cid) -> dict:
+    return dict({"decide": "v1", "native": "v1", "reflect": "v1", "risk_manager": "v1", "orchestrator": "v1"},
+                **PROMPT_VERSIONS.get(cid, {}))
+
+
+def _p(name, version=PROMPT_VERSION):
+    return open(os.path.join(PROMPTS, f"{name}_{version}.md"), encoding="utf-8").read()
 
 
 def _rec(role, r, payload, prompt_version):
@@ -100,8 +107,43 @@ class ContextBuilder:
             res["btc_above_1h_ema50"] = bool(self.R.btc_bull_60[b])
         return res
 
-    def card(self, card, j, acct_state, profile, bands):
+    def liquidity_rank_pct(self, s, j):
+        """Percentile (0-100) of this coin's 15m share_of_minutes_traded among the core coins (BTC ~ top)."""
+        b = self._bar(15, j)
+        if b < 0:
+            return None
+        liq = np.nan_to_num(self.F.x[15]["liq"][:, b])
+        core = [i for i, n in enumerate(self.m.symbols) if n not in ("BTCUSDT", "USDTTMN")]
+        return _r(100.0 * float(np.mean(liq[core] <= liq[s])), 0)
+
+    def dd_from_high_pct(self, s, j, window=360):
+        hi = float(np.max(self.m.h[s, max(0, j - window):j + 1]))
+        return _r((self.m.c[s, j] / hi - 1) * 100, 2) if hi > 0 else None
+
+    def evidence(self, s, j, ctx, coin=None, market=None):
+        market = market if market is not None else self.market_view(j)
+        coin = coin if coin is not None else {}
+        dd6 = ctx.get("dd6_pct")
+        return {"liquidity_rank_pct": self.liquidity_rank_pct(s, j), "m1_prev_6h": ctx.get("m1_prev_6h"),
+                "dd_from_6h_high_pct": dd6 if dd6 is not None else self.dd_from_high_pct(s, j),
+                "btc_above_1h_ema50": market.get("btc_above_1h_ema50"),
+                "btc_ret_15m_pct": (market.get("btc_usd") or {}).get("ret_15m_pct"),
+                "tehran_hour": ctx.get("tehran_hour"), "hours_to_flatten": ctx.get("hours_to_flatten"),
+                "coin_ret_24h_pct": coin.get("ret_24h_pct")}
+
+    def card(self, card, j, acct_state, profile, bands, version="v1", ctx=None, contest=None):
         price = card.price
+        if version == "v2":
+            coin, market = self.coin_view(card.sym, j, bars=8), self.market_view(j)
+            return {
+                "asset": self.name(card.sym), "scanner": card.scanner,
+                "scanner_meaning": SCANNER_TEXT.get(card.scanner, ""), "signal_timeframe": f"{card.tf}m",
+                "suggested_stop_pct_below": _r((price - card.stop_hint) / price * 100, 2) if card.stop_hint and card.stop_hint < price else None,
+                "nearby_resistance_pct": _r((card.tp_hint / price - 1) * 100, 2) if card.tp_hint == card.tp_hint and card.tp_hint > price else None,
+                "evidence_features": self.evidence(card.sym, j, ctx or {}, coin, market),
+                "regime": self.R.at(j, card.sym), "coin": coin, "market": market,
+                "portfolio": acct_state, "contest": contest, "allowed_bands": bands,
+            }
         return {
             "asset": self.name(card.sym), "scanner": card.scanner, "scanner_meaning": SCANNER_TEXT.get(card.scanner, ""),
             "signal_timeframe": f"{card.tf}m",
@@ -131,7 +173,26 @@ def bands_of(profile):
            "max_time_stop_min": c.get("time_stop")}
     if "risk_tmn" in c:
         out["sizing"] = f"size is computed by code from risk {c['risk_tmn']} TMN / sl_pct"
+    if "size_tiers" in c:
+        out.pop("size_tmn")
+        out["size_tiers_tmn"] = c["size_tiers"]
+        out["sizing"] = "you pick size_tier; code caps the risk per trade and the portfolio heat"
     return out
+
+
+def contest_block(ctx) -> dict:
+    """End-of-window info for v2 prompts (from the account context)."""
+    from .runtime import fmt_tehran
+    ts = ctx.get("flatten_start_ts")
+    return {"flatten_start": fmt_tehran(ts) + " Tehran" if ts else None, "hours_left": ctx.get("hours_to_flatten"),
+            "target_trades_24h": "10-15"}
+
+
+def max_time_stop(profile, ctx) -> int:
+    """Longest allowed hold: combo time stop, and never past flatten_start - 5 min."""
+    m = int(COMBOS[profile].get("time_stop") or 1440)
+    h = ctx.get("hours_to_flatten")
+    return max(0, min(m, int(h * 60 - 5))) if h is not None else m
 
 
 class _HotSwap:
@@ -162,15 +223,16 @@ class LLMPolicy(_HotSwap):
         self.cb = None
         self.calls = []        # per-call log (prompt hash, latency, ok, error)
         self.log_path = log_path
-        self.sys_decide, self.sys_risk = _p("decide"), _p("risk_manager")
+        self.pv = prompt_versions(cid)
+        self.sys_decide, self.sys_risk = _p("decide", self.pv["decide"]), _p("risk_manager", self.pv["risk_manager"])
         self.lessons = []          # (asset, scanner, tag, lesson)
-        self.use_memory = cid == "C6"
+        self.use_memory = cid in ("C6", "C7")
 
     def bind(self, m, F, R):
         self.cb = ContextBuilder(m, F, R, self.anonymize)
 
     def _log(self, role, r, payload):
-        rec = _rec(role, r, payload, PROMPT_VERSION)
+        rec = _rec(role, r, payload, self.pv.get(role, PROMPT_VERSION))
         self.calls.append({k: rec[k] for k in ("role", "ok", "latency_s", "cached", "error", "cost_usd")})
         if self.log_path:
             with open(self.log_path, "a", encoding="utf-8") as f:
@@ -178,8 +240,14 @@ class LLMPolicy(_HotSwap):
 
     def decide(self, card, ctx):
         j, profile = ctx["idx"], ctx.get("profile", self.cid)
-        state = {"equity_tmn": round(ctx["equity"]), "open_positions": ctx["open_positions"]}
-        payload = self.cb.card(card, j, state, profile, bands_of(profile))
+        if self.pv["decide"] == "v2":
+            state = {"equity_tmn": round(ctx["equity"]), "positions": ctx.get("positions", []),
+                     "trades_24h": ctx.get("trades_24h"), "gov_state": ctx.get("gov_state")}
+            bands = dict(bands_of(profile), max_time_stop_min=max_time_stop(profile, ctx))
+            payload = self.cb.card(card, j, state, profile, bands, version="v2", ctx=ctx, contest=contest_block(ctx))
+        else:
+            state = {"equity_tmn": round(ctx["equity"]), "open_positions": ctx["open_positions"]}
+            payload = self.cb.card(card, j, state, profile, bands_of(profile))
         if self.use_memory and self.lessons:
             asset = self.cb.name(card.sym)
             rel = [l for l in self.lessons if l[0] == asset or l[1] == card.scanner][-5:]
@@ -227,7 +295,7 @@ class Reflector(_HotSwap):
     ROLES = (("llm", "reflect"),)
     def __init__(self, llm_profile=None, log_path=None):
         self._build(llm_profile)
-        self.sys = _p("reflect")
+        self.sys = _p("reflect", "v1")
         self.log_path = log_path
 
     def reflect(self, trade, asset_name):
@@ -274,22 +342,33 @@ class Orchestrator(_HotSwap):
 class Native(_HotSwap):
     """C5: the LLM sees a table of liquid coins every 15 min and picks up to 2 buys (no scanner)."""
     ROLES = (("llm", "native"),)
-    def __init__(self, llm_profile=None, log_path=None):
+    def __init__(self, llm_profile=None, log_path=None, prompt_version="v1"):
         self._build(llm_profile)
-        self.sys = _p("native")
+        self.version = prompt_version
+        self.sys = _p("native", prompt_version)
         self.log_path = log_path
 
-    def pick(self, cb: ContextBuilder, j, coins, state, bands):
+    def pick(self, cb: ContextBuilder, j, coins, state, bands, extra=None, contest=None):
+        """extra (v2): {sym_idx: {"m1_signals_6h": n, "held": bool}} from the account."""
         table = {}
+        v2 = self.version == "v2"
         for s in coins:
             v = cb.coin_view(s, j, bars=6)
             table[cb.name(s)] = {k: v.get(k) for k in ("ret_1h_pct", "ret_4h_pct", "ret_24h_pct", "vs_daily_vwap_pct")}
             table[cb.name(s)].update({"15m": v.get("15m"), "regime": cb.R.at(j, s)["coin"]})
+            if v2:
+                e = (extra or {}).get(s, {})
+                table[cb.name(s)].update({"dd_from_6h_high_pct": cb.dd_from_high_pct(s, j),
+                                          "m1_signals_6h": e.get("m1_signals_6h", 0),
+                                          "liquidity_rank_pct": cb.liquidity_rank_pct(s, j), "held": bool(e.get("held"))})
         payload = {"coins": table, "market": cb.market_view(j), "portfolio": state, "allowed_bands": bands}
-        r = self.llm.decide(self.sys, json.dumps(payload, ensure_ascii=False),
-                            {"type": "object", "required": ["buys"], "properties": {"buys": {"type": "array", "maxItems": 2}}},
+        if v2:
+            payload["contest"] = contest
+        schema = NATIVE_SCHEMA if v2 else {"type": "object", "required": ["buys"],
+                                           "properties": {"buys": {"type": "array", "maxItems": 2}}}
+        r = self.llm.decide(self.sys, json.dumps(payload, ensure_ascii=False), schema,
                             priority=PRIORITY_NORMAL, role="native")
-        log_call(self.log_path, "native", r, payload)
+        log_call(self.log_path, "native", r, payload, prompt_version=self.version)
         inv = {cb.name(s): s for s in coins}
         out = []
         if r.ok:

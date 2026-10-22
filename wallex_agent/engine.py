@@ -338,7 +338,9 @@ class Account:
             ctx.update(equity=self.equity_now(j), m1_prev_6h=card.info.get("m1_prev_6h"),
                        dd6_pct=card.info.get("dd6_pct"), tehran_hour=self._tehran_hour(j),
                        hours_to_flatten=round((t_flat - self.m.t[j]) / 3600, 2) if t_flat is not None else None,
-                       trades_24h=self.trades_24h(j), gov_state=self.gov_state)
+                       trades_24h=self.trades_24h(j), gov_state=self.gov_state, flatten_start_ts=t_flat,
+                       positions=[{"coin": self.m.symbols[s], "pnl_pct": round((self.m.c[s, j] / p.entry_px - 1) * 100, 2)}
+                                  for s, p in self.positions.items()])
         return ctx
 
     def trades_24h(self, j):
