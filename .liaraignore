@@ -1,0 +1,14 @@
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.idea/
+.DS_Store
+# state and data belong on disks/volumes, never in the image (stale live_state.json / LLM ledger)
+runs/
+data/
+.cache/
+wallex_check_result.json

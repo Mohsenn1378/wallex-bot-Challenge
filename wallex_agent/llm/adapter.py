@@ -60,6 +60,7 @@ class LLMResult:
     cached: bool = False
     attempts: int = 1
     usage: dict = field(default_factory=dict)
+    cost_usd: float = 0.0
 
 
 class LLMError(Exception):
@@ -139,15 +140,16 @@ class OpenAICompat(Backend):
     """Chat Completions. Gateways differ, so on HTTP 400 we retry with progressively simpler bodies."""
     def complete(self, system, prompt):
         mx = int(self.cfg.get("max_output_tokens", self.d.get("max_output_tokens", 1200)))
+        mx += int(self.cfg.get("completion_headroom", 4000))   # room for reasoning tokens
         base = {"model": self.cfg["model"],
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]}
         variants = []
-        v = dict(base, max_completion_tokens=mx + 4000, response_format={"type": "json_object"})
+        v = dict(base, max_completion_tokens=mx, response_format={"type": "json_object"})
         if self.cfg.get("reasoning_effort"):
             v["reasoning_effort"] = self.cfg["reasoning_effort"]
         variants.append(v)
         variants.append({k: x for k, x in v.items() if k != "response_format"})
-        variants.append(dict(base, max_tokens=mx + 4000))
+        variants.append(dict(base, max_tokens=mx))
         variants.append(dict(base))
         url = self.cfg["base_url"].rstrip("/") + "/chat/completions"
         hdr = {"Authorization": f"Bearer {self._key()}", **(self.cfg.get("headers") or {})}
@@ -340,30 +342,79 @@ class _RateLimiter:
         self.sem.release()
 
 
-class TokenLedger:
-    """Shared across processes: one line per call appended to .cache/token_ledger.txt.
-    Caps: config defaults.token_budget_total (whole account) and env LLM_TOKEN_CAP (this run)."""
-    def __init__(self, total_cap: int, run_cap: int | None):
-        self.path = os.path.join(ROOT, ".cache", "token_ledger.txt")
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        self.total_cap, self.run_cap, self.run_used = total_cap, run_cap, 0
+PRIORITY_HIGH, PRIORITY_NORMAL, PRIORITY_LOW = "high", "normal", "low"
+
+
+class Ledger:
+    """Budget ledger of one gateway, shared across processes via an append-only text file.
+    One instance per (folder, name). Folder: env LLM_LEDGER_DIR (default .cache).
+      codecraft -> token_ledger.txt, lines "tokens profile unix_ts" (legacy format, token cap)
+      other     -> ledger_<name>.txt, lines "tokens usd profile unix_ts role" (USD cap + priority)
+    A full ledger only blocks profiles that write to it (CodeCraft's token cap never blocks BoxAPI)."""
+    _instances: dict = {}
+    _ilock = threading.Lock()
+
+    @classmethod
+    def get(cls, name: str, defaults: dict) -> "Ledger":
+        folder = os.environ.get("LLM_LEDGER_DIR") or os.path.join(ROOT, ".cache")
+        with cls._ilock:
+            key = (os.path.abspath(folder), name)
+            if key not in cls._instances:
+                cfg = dict((defaults.get("ledgers") or {}).get(name) or {})
+                if name == "codecraft" and "token_cap" not in cfg:
+                    cfg["token_cap"] = int(defaults.get("token_budget_total", 0) or 0)
+                cls._instances[key] = cls(name, folder, cfg)
+            return cls._instances[key]
+
+    def __init__(self, name: str, folder: str, cfg: dict):
+        self.name, self.cfg = name, cfg
+        os.makedirs(folder, exist_ok=True)
+        self.path = os.path.join(folder, "token_ledger.txt" if name == "codecraft" else f"ledger_{name}.txt")
+        self.token_cap = int(cfg.get("token_cap", 0) or 0)
+        self.low_frac = float(cfg.get("low_priority_stop_frac", 0.8))
+        rc = os.environ.get("LLM_TOKEN_CAP")
+        self.run_cap, self.run_used = (int(rc) if rc else None), 0
         hc = os.environ.get("LLM_TOKENS_PER_HOUR")
         self.hour_cap = int(hc) if hc else None        # pacing: spread the budget over the whole run
         self.recent = []                                # (time, tokens) of this process
         self.lock = threading.Lock()
 
-    def used_total(self) -> int:
+    @property
+    def usd_cap(self) -> float:
+        """Read on every check so the cap can be raised at runtime (env LLM_BUDGET_USD wins)."""
+        if not self.cfg.get("usd_cap"):
+            return 0.0
+        env = os.environ.get("LLM_BUDGET_USD")
+        return float(env) if env else float(self.cfg["usd_cap"])
+
+    def _rows(self):
         try:
             with open(self.path, encoding="utf-8") as f:
-                return sum(int(l.split()[0]) for l in f if l.strip())
+                return [l.split() for l in f if l.strip()]
         except OSError:
-            return 0
+            return []
 
-    def check(self):
+    def used_total(self) -> int:
+        return sum(int(r[0]) for r in self._rows())
+
+    def used_usd(self) -> float:
+        if self.name == "codecraft":
+            return 0.0
+        return sum(float(r[1]) for r in self._rows() if len(r) > 1)
+
+    def check(self, priority: str = PRIORITY_HIGH):
         if self.run_cap and self.run_used >= self.run_cap:
             raise LLMError(f"token cap for this run reached ({self.run_used}/{self.run_cap})")
-        if self.total_cap and self.used_total() >= self.total_cap:
-            raise LLMError(f"total token budget reached ({self.total_cap})")
+        if self.token_cap and self.used_total() >= self.token_cap:
+            raise LLMError(f"total token budget of ledger '{self.name}' reached ({self.token_cap})")
+        cap = self.usd_cap
+        if cap:
+            used = self.used_usd()
+            if used >= cap:
+                raise LLMError(f"USD budget of ledger '{self.name}' reached ({used:.3f}/{cap:.2f})")
+            if priority != PRIORITY_HIGH and used >= self.low_frac * cap:
+                raise LLMError(f"USD budget of ledger '{self.name}' at {used / cap:.0%}: "
+                               f"{priority}-priority calls stopped (decide still allowed)")
         if self.hour_cap:
             now = time.time()
             with self.lock:
@@ -372,12 +423,36 @@ class TokenLedger:
             if used >= self.hour_cap:
                 raise LLMError(f"hourly token cap reached ({used}/{self.hour_cap}); call skipped")
 
-    def add(self, n: int, who: str):
+    def add(self, n: int, usd: float, who: str, role: str = "-"):
         with self.lock:
             self.run_used += n
             self.recent.append((time.time(), n))
+            line = (f"{int(n)} {who} {int(time.time())}\n" if self.name == "codecraft"
+                    else f"{int(n)} {usd:.6f} {who} {int(time.time())} {role or '-'}\n")
             with open(self.path, "a", encoding="utf-8") as f:
-                f.write(f"{int(n)} {who} {int(time.time())}\n")
+                f.write(line)
+
+
+TokenLedger = Ledger   # old name
+
+
+def cost_usd(usage: dict, price: dict | None, system: str = "", prompt: str = "") -> float:
+    """Gateway-reported cost (BoxAPI: usage.cost, USD) when present. Otherwise OpenAI usage semantics:
+    prompt_tokens includes cached tokens; completion_tokens includes reasoning. No usage -> estimate input as
+    len/3.5 and output as 600 tokens."""
+    if not price:
+        return 0.0
+    rep = (usage or {}).get("cost")
+    if isinstance(rep, (int, float)) and not isinstance(rep, bool) and rep >= 0:
+        return float(rep)
+    if usage and (usage.get("prompt_tokens") is not None or usage.get("completion_tokens") is not None):
+        pt = int(usage.get("prompt_tokens") or 0)
+        ct = int(usage.get("completion_tokens") or 0)
+        cached = int(((usage.get("prompt_tokens_details") or {}).get("cached_tokens")) or 0)
+    else:
+        pt, ct, cached = int((len(system) + len(prompt)) / 3.5), 600, 0
+    return ((pt - cached) * float(price.get("input", 0)) + cached * float(price.get("cached_input", price.get("input", 0)))
+            + ct * float(price.get("output", 0))) / 1e6
 
 
 def _tokens(usage: dict, system: str, prompt: str, raw: str) -> int:
@@ -390,27 +465,42 @@ def _tokens(usage: dict, system: str, prompt: str, raw: str) -> int:
 
 
 # ---------------------------------------------------------------- public facade
-class LLM:
-    _ledger = None
+def resolve_chain(cfg: dict, role: str, override: str | list | None = None) -> list[str]:
+    """Profile names for a role. Comma list / list override -> exactly that list. A single-name override ->
+    [override] + the role chain's members that write to the same ledger (fallbacks stay on that gateway)."""
+    profiles = cfg["profiles"]
+    role_chain = list(cfg["roles"].get(role) or [])
+    if not override:
+        return role_chain
+    if isinstance(override, str) and "," in override:
+        return [n.strip() for n in override.split(",") if n.strip()]
+    if not isinstance(override, str):
+        return list(override)
+    p = profiles.get(override)
+    if not p or p.get("backend") == "mock":
+        return [override]
+    led = p.get("ledger", "codecraft")
+    return [override] + [n for n in role_chain if n != override and n in profiles
+                         and profiles[n].get("backend") != "mock" and profiles[n].get("ledger", "codecraft") == led]
 
+
+class LLM:
     def __init__(self, chain: list[Backend], defaults: dict, cache: _Cache | None, limiter: _RateLimiter):
         self.chain, self.d, self.cache, self.limiter = chain, defaults, cache, limiter
-        if LLM._ledger is None:
-            rc = os.environ.get("LLM_TOKEN_CAP")
-            LLM._ledger = TokenLedger(int(defaults.get("token_budget_total", 0) or 0), int(rc) if rc else None)
-        self.ledger = LLM._ledger
+        for be in chain:
+            if not hasattr(be, "ledger"):
+                be.ledger = None if isinstance(be, Mock) else Ledger.get(be.cfg.get("ledger", "codecraft"), defaults)
+        led = [be.ledger for be in chain if be.ledger is not None]
+        self.ledger = led[0] if led else Ledger.get("codecraft", defaults)
+        self.ledgers = list(dict.fromkeys(led))
 
     @classmethod
     def from_config(cls, path: str | None = None, role: str = "decide", override: str | list | None = None):
         load_env()
         cfg = load_config(path)
         d = cfg.get("defaults", {})
-        names = override or cfg["roles"].get(role) or []
-        names = [names] if isinstance(names, str) else list(names)
-        if isinstance(override, str) and "," in override:
-            names = [n.strip() for n in override.split(",")]
         chain = []
-        for n in names:
+        for n in resolve_chain(cfg, role, override):
             p = cfg["profiles"].get(n)
             if not p:
                 raise LLMError(f"unknown LLM profile '{n}' (see config/llm.yaml)")
@@ -419,12 +509,19 @@ class LLM:
         lim = _RateLimiter(int(d.get("calls_per_hour", 600)), int(d.get("max_parallel_calls", 4)))
         return cls(chain, d, cache, lim)
 
-    def decide(self, system: str, prompt: str, schema: dict | None = None, use_cache: bool = True) -> LLMResult:
-        """Try each backend in the chain; each gets json_retries extra attempts for invalid JSON."""
-        last_err, t0, attempts = "no backend configured", time.time(), 0
+    @property
+    def names(self) -> str:
+        return ",".join(be.name for be in self.chain)
+
+    def decide(self, system: str, prompt: str, schema: dict | None = None, use_cache: bool = True,
+               priority: str = PRIORITY_HIGH, role: str | None = None) -> LLMResult:
+        """Try each backend in the chain; each gets json_retries extra attempts for invalid JSON.
+        priority: high (entry decisions) may spend up to 100% of a USD ledger, normal/low stop at low_priority_stop_frac."""
+        last_err, t0, attempts, spent = "no backend configured", time.time(), 0, 0.0
         for be in self.chain:
+            cache_on = use_cache and self.cache and be.cfg.get("cache", self.d.get("cache", True))
             key = hashlib.sha256(f"{be.name}\n{system}\n{prompt}".encode()).hexdigest()
-            if use_cache and self.cache:
+            if cache_on:
                 hit = self.cache.get(key)
                 if hit is not None:
                     data = json.loads(hit)
@@ -432,27 +529,36 @@ class LLM:
             p = prompt
             for i in range(1 + int(self.d.get("json_retries", 2))):
                 attempts += 1
-                try:
-                    self.ledger.check()
-                except LLMError as e:
-                    return LLMResult(False, None, str(e), time.time() - t0, be.name, attempts=attempts)
-                self.limiter.acquire()
+                if be.ledger is not None:
+                    try:
+                        be.ledger.check(priority)
+                    except LLMError as e:
+                        last_err = f"{be.name}: {e}"
+                        break  # budget closed for this gateway -> next backend (if on another ledger)
+                limited = not isinstance(be, Mock)        # the offline mock is never rate-limited
+                if limited:
+                    self.limiter.acquire()
                 try:
                     raw, usage = be.complete(system, p)
-                    if not type(be).__name__.startswith("Mock"):
-                        self.ledger.add(_tokens(usage, system, p, raw), be.name)
+                    if be.ledger is not None:
+                        usd = cost_usd(usage, be.cfg.get("price_usd_per_m"), system, p)
+                        spent += usd
+                        be.ledger.add(_tokens(usage, system, p, raw), usd, be.name, role or "-")
                 except LLMError as e:
                     last_err = f"{be.name}: {e}"
                     break  # transport error -> next backend in chain
                 finally:
-                    self.limiter.release()
+                    if limited:
+                        self.limiter.release()
                 data = extract_json(raw)
                 errs = validate(data, schema) if (schema and data is not None) else ([] if data is not None else ["no JSON object found"])
                 if not errs:
-                    if use_cache and self.cache:
+                    if cache_on:
                         self.cache.put(key, json.dumps(data, ensure_ascii=False))
-                    return LLMResult(True, data, None, time.time() - t0, be.name, raw, attempts=attempts, usage=usage)
+                    return LLMResult(True, data, None, time.time() - t0, be.name, raw, attempts=attempts, usage=usage,
+                                     cost_usd=spent)
                 last_err = f"{be.name}: invalid JSON ({'; '.join(errs)[:200]})"
                 p = prompt + "\n\nYour previous answer was invalid: " + "; ".join(errs)[:300] + \
                     "\nReturn ONLY one JSON object that matches the schema."
-        return LLMResult(False, None, last_err, time.time() - t0, self.chain[-1].name if self.chain else "-", attempts=attempts)
+        return LLMResult(False, None, last_err, time.time() - t0, self.chain[-1].name if self.chain else "-",
+                         attempts=attempts, cost_usd=spent)

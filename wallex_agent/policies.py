@@ -11,7 +11,7 @@ DECISION_SCHEMA = {
     "properties": {
         "action": {"enum": ["enter", "skip"]},
         "size_tmn": {"type": "number", "minimum": 0},
-        "sl_pct": {"type": "number", "minimum": 0.2, "maximum": 10},
+        "sl_pct": {"type": "number", "minimum": 0, "maximum": 10},   # skips often send 0; guard clamps enters to the band
         "tp_plan": {"type": "array", "maxItems": 3, "items": {
             "type": "object", "required": ["pct", "portion"],
             "properties": {"pct": {"type": "number", "minimum": 0.2, "maximum": 20},
@@ -21,8 +21,17 @@ DECISION_SCHEMA = {
         "thesis": {"type": "string", "minLength": 3},
         "invalidation": {"type": "string"},
         "profile": {"enum": ["C1", "C2", "C3", "C4", "off"]},
+        # v2 (C7). Optional; a skip may send null. An enter without a tier is sized as "standard" by the guard.
+        "size_tier": {"enum": ["probe", "standard", "high", None]},
+        "setup_quality": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
     },
 }
+
+NATIVE_SCHEMA = {"type": "object", "required": ["buys"], "properties": {"buys": {"type": "array", "maxItems": 2,
+    "items": {"type": "object", "required": ["symbol", "size_tier", "sl_pct", "thesis"],
+              "properties": {"symbol": {"type": "string"}, "size_tier": {"enum": ["probe", "standard", "high"]},
+                             "setup_quality": {"type": "number", "minimum": 0, "maximum": 100},
+                             "sl_pct": {"type": "number", "minimum": 0.2, "maximum": 10}}}}}}
 
 
 def _sl_from_hint(card, band):

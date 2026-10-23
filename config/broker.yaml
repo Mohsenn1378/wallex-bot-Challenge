@@ -1,0 +1,14 @@
+stop_supported: true            # boolean only; set by tools/live_smoke.py
+stop_type: STOP_LIMIT
+stop_field: stop_Price
+limit_rel_ok: true
+balance_value_includes_locked: true
+dup_id_rejected: true
+cancel_method: query
+buy_fee_in_base: true
+max_entry_slip: 0.004
+max_limit_distance: 0.03
+exit_slip_ladder: [0.008, 0.012, 0.02, 0.03]
+poll_s: 1
+fill_wait_s: 15
+# written by tools/live_smoke.py at 2026-10-23 00:00:24

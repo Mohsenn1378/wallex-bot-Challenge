@@ -1,0 +1,18 @@
+# secrets: passed at runtime, never in the image
+.env
+.env.*
+
+# state and data live on volumes (baking them in would resume a stale live_state / ledger)
+runs/
+data/
+.cache/
+wallex_check_result.json
+
+# local tooling
+.git/
+.venv/
+.idea/
+.pytest_cache/
+__pycache__/
+*.pyc
+.DS_Store

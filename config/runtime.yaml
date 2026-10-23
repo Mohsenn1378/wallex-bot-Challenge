@@ -1,0 +1,14 @@
+# Runtime control file: re-read every cycle (mtime cached). Changes apply on the next cycle and are logged to
+# runs/<run>/control_changes.jsonl. An invalid file is ignored (last valid version kept + warning).
+# This file only changes parameters; it never places orders.
+llm_profile: "box_sol61,box_sol6,box_sol56"   # hot-swap: any profile or comma chain (applied next cycle)
+pause_entries: false          # true = no new entries, keep managing open positions
+size_mult: 1.0                # 0..1.5 (governor still applies; floor 65k)
+native_every_min: 30          # 15..240 (elapsed-time schedule)
+max_positions: 6
+probe_only_after: "2026-10-23 14:00"     # Tehran (+03:30)
+no_new_entries_after: "2026-10-23 20:00"
+flatten_start: "2026-10-23 22:00"
+hard_deadline: "2026-10-23 22:45"
+flatten_now: false            # emergency algorithmic flatten
+# prompt_version: v2          # fixed in P0 (decide/native v2, reflect v1); hot-swap of prompts is P1-06
